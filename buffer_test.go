@@ -17,7 +17,7 @@ func TestIO(t *testing.T) {
 
 	try := 2
 
-	w := test.NewBadWriter(os.Stdout, try)
+	w := test.NewBadWriter(os.Stdout, test.CountDown(try))
 
 	var err error
 	_, err = io.Copy(w, buf)
@@ -133,7 +133,7 @@ func isPerfectMatch(t *testing.T, buf Buffer, size int64) {
 }
 
 func checkEmpty(t *testing.T, buf Buffer) {
-	if buf.Len() != 0 {
+	if !Empty(buf) {
 		t.Error("Buffer should start empty!")
 	}
 }
