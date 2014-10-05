@@ -3,10 +3,33 @@ package buffer
 import (
 	"bytes"
 	"crypto/rand"
+	"fmt"
 	"io"
 	"io/ioutil"
+	"lib/test"
+	"os"
 	"testing"
 )
+
+func TestIO(t *testing.T) {
+	buf := NewPartition(1024, NewFile)
+	buf.Write([]byte("Hello world\n"))
+
+	try := 2
+
+	w := test.NewBadWriter(os.Stdout, try)
+
+	var err error
+	_, err = io.Copy(w, buf)
+	for i := 0; i < try && err != nil; i++ {
+		fmt.Println("Retrying...", err.Error())
+		_, err = io.Copy(w, buf)
+	}
+
+	if err != nil {
+		t.Error("Write failed.", err.Error())
+	}
+}
 
 func TestFile(t *testing.T) {
 	buf := NewFile(1024)

@@ -14,9 +14,10 @@ type file struct {
 }
 
 func NewFile(capacity int64) Buffer {
-	return &file{
+	buf := &file{
 		capacity: capacity,
 	}
+	return newBuffer(buf)
 }
 
 func (buf *file) init() error {

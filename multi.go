@@ -21,7 +21,7 @@ func NewMulti(buffers ...Buffer) Buffer {
 		hasNext: len(buffers[1:]) != 0,
 	}
 
-	return buf
+	return newBuffer(buf)
 }
 
 func (buf *linkBuffer) Cap() (n int64) {

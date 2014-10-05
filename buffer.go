@@ -19,6 +19,39 @@ type Buffer interface {
 	io.Writer
 }
 
+type buffer struct {
+	head []byte
+	Buffer
+}
+
+func newBuffer(buf Buffer) Buffer {
+	return &buffer{
+		Buffer: buf,
+	}
+}
+
+func (buf *buffer) WriteTo(w io.Writer) (n int64, err error) {
+	for !Empty(buf) || len(buf.head) != 0 {
+		if len(buf.head) == 0 {
+			buf.head = make([]byte, 1024*32)
+			m, er := buf.Read(buf.head)
+			buf.head = buf.head[:m]
+			if er != nil && er != io.EOF {
+				return n, er
+			}
+		}
+
+		m, er := w.Write(buf.head)
+		n += int64(m)
+		buf.head = buf.head[m:]
+		if er != nil {
+			return n, er
+		}
+
+	}
+	return n, nil
+}
+
 func MaxCap() int64 {
 	return maxInt64
 }
