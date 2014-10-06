@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-func TestIO(t *testing.T) {
+func ExamplePartition() {
 	buf := NewPartition(1024, NewFile)
 	buf.Write([]byte("Hello world\n"))
 
@@ -25,10 +25,10 @@ func TestIO(t *testing.T) {
 		fmt.Println("Retrying...", err.Error())
 		_, err = io.Copy(w, buf)
 	}
-
-	if err != nil {
-		t.Error("Write failed.", err.Error())
-	}
+	// Output:
+	// Retrying... Too lazy, ask me 1 more times.
+  // Retrying... Too lazy, ask me 0 more times.
+  // Hello world
 }
 
 func TestFile(t *testing.T) {
