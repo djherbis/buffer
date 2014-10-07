@@ -31,6 +31,26 @@ func ExamplePartition() {
   // Hello world
 }
 
+func TestWriter(t *testing.T) {
+	buf := NewPartition(1024, NewFile)
+	buf2 := bytes.NewBuffer(nil)
+	try := 100
+	bw := test.NewBadWriter(buf2, test.CountDown(try))
+	w := NewWriter(bw, buf)
+
+	r := io.LimitReader(rand.Reader, 1024*10)
+	tee := io.TeeReader(r, w)
+	
+	read, _ := ioutil.ReadAll(tee)
+	for i := 0; i < try && w.Close() != nil; i++ {
+	}
+	wrote, _ := ioutil.ReadAll(buf2)
+
+	if !bytes.Equal(wrote, read) {
+		t.Error("Writer failed to write random data to buffer.")
+	}
+}
+
 func TestFile(t *testing.T) {
 	buf := NewFile(1024)
 	checkCap(t, buf, 1024)

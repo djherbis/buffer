@@ -30,11 +30,20 @@ func newBuffer(buf Buffer) Buffer {
 	}
 }
 
+func (buf *buffer) Len() int64 {
+	return buf.Buffer.Len() + int64(len(buf.head))
+}
+
+func (buf *buffer) Write(p []byte) (n int, err error) {
+	n, err = buf.Buffer.Write(ShrinkToFit(buf, p))
+	return n, err
+}
+
 func (buf *buffer) WriteTo(w io.Writer) (n int64, err error) {
 	for !Empty(buf) || len(buf.head) != 0 {
 		if len(buf.head) == 0 {
 			buf.head = make([]byte, 1024*32)
-			m, er := buf.Read(buf.head)
+			m, er := buf.Buffer.Read(buf.head)
 			buf.head = buf.head[:m]
 			if er != nil && er != io.EOF {
 				return n, er
