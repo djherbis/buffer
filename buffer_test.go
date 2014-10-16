@@ -27,8 +27,8 @@ func ExamplePartition() {
 	}
 	// Output:
 	// Retrying... Too lazy, ask me 1 more times.
-  // Retrying... Too lazy, ask me 0 more times.
-  // Hello world
+	// Retrying... Too lazy, ask me 0 more times.
+	// Hello world
 }
 
 func TestWriter(t *testing.T) {
@@ -40,7 +40,7 @@ func TestWriter(t *testing.T) {
 
 	r := io.LimitReader(rand.Reader, 1024*10)
 	tee := io.TeeReader(r, w)
-	
+
 	read, _ := ioutil.ReadAll(tee)
 	for i := 0; i < try && w.Close() != nil; i++ {
 	}
