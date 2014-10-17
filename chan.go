@@ -29,9 +29,6 @@ recv:
 
 		case next <- top:
 			top = Top(pending)
-			if Empty(pending) {
-				break
-			}
 		}
 
 	}
@@ -76,9 +73,6 @@ recv:
 
 		case next <- pending[0]:
 			pending = pending[1:]
-			if len(pending) == 0 {
-				break
-			}
 		}
 
 	}
