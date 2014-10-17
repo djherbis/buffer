@@ -10,7 +10,7 @@ type Writer struct {
 	buffering bool
 }
 
-func NewWriter(w io.Writer, b Buffer) *Writer {
+func NewWriter(w io.Writer, b Buffer) io.WriteCloser {
 	return &Writer{
 		Writer: w,
 		buf:    b,
