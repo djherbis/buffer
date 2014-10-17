@@ -10,7 +10,7 @@ recv:
 
 	for {
 
-		if Empty(pending) {
+		if Empty(pending) && len(top) == 0 {
 			data, ok := <-in
 			if !ok {
 				break
