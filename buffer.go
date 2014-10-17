@@ -123,3 +123,7 @@ func TotalCap(buffers []Buffer) (n int64) {
 	}
 	return n
 }
+
+func NewUnboundedBuffer(mem, chunk int64) Buffer {
+	return NewMulti(New(mem), NewPartition(chunk, NewFile))
+}
