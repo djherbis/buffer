@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"sync"
 	"testing"
+	"bytes"
+	"io/ioutil"
 )
 
 func TestPipe(t *testing.T) {
 	r, w := Pipe()
-
-	group := new(sync.WaitGroup)
-	group.Add(1)
 
 	go func(){
 		for i := 0; i < 10; i++ {
@@ -19,21 +18,10 @@ func TestPipe(t *testing.T) {
 		w.Close()
 	}()
 	
-
-	go func(){
-		defer group.Done()
-		data := make([]byte, 32*1024)
-		for {
-			if n, err := r.Read(data); err == nil {
-				fmt.Print(string(data[:n]))
-			} else {
-				fmt.Println("")
-				return
-			}
-		}
-	}()
-
-	group.Wait()
+	data, _ := ioutil.ReadAll(r)
+	if !bytes.Equal(data, []byte("0123456789")) {
+		t.Error("Not equal!")
+	}
 }
 
 func TestMemChan(t *testing.T) {
@@ -51,10 +39,13 @@ func TestMemChan(t *testing.T) {
 
 		go func() {
 			defer group.Done()
+			s := ""
 			for out := range output {
-				fmt.Print(string(out))
+				s += string(out)
 			}
-			fmt.Println("")
+			if s != "0123456789" {
+				t.Error("Not equal!")
+			}
 		}()
 
 		close(input)
@@ -79,10 +70,13 @@ func TestChan(t *testing.T) {
 
 		go func() {
 			defer group.Done()
+			s := ""
 			for out := range output {
-				fmt.Print(string(out))
+				s += string(out)
 			}
-			fmt.Println("")
+			if s != "0123456789" {
+				t.Error("Not equal!")
+			}
 		}()
 
 		close(input)
