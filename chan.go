@@ -2,14 +2,14 @@ package buffer
 
 func Chan(in <-chan []byte, next chan<- []byte) {
 	pending := NewBufferQueue(NewUnboundedBuffer(32*1024, 100*1024*1024))
-	chanQueue(in, next, pending)
+	ChanQueue(in, next, pending)
 }
 
 func MemChan(in <-chan []byte, next chan<- []byte) {
-	chanQueue(in, next, NewSliceQueue())
+	ChanQueue(in, next, NewSliceQueue())
 }
 
-func chanQueue(in <-chan []byte, next chan<- []byte, pending Queue) {
+func ChanQueue(in <-chan []byte, next chan<- []byte, pending Queue) {
 	defer close(next)
 
 recv:
