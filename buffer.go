@@ -12,6 +12,10 @@ const (
 	maxAlloc  = int64(1024 * 32)
 )
 
+type Resetter interface {
+	Reset()
+}
+
 type Lener interface {
 	Len() int64
 }
@@ -28,6 +32,7 @@ type LenCaper interface {
 type Buffer interface {
 	Lener
 	Caper
+	Resetter
 	io.Reader
 	io.Writer
 }
@@ -98,6 +103,12 @@ func TotalCap(buffers []Buffer) (n int64) {
 		}
 	}
 	return n
+}
+
+func ResetAll(buffers []Buffer) {
+	for _, buffer := range buffers {
+		buffer.Reset()
+	}
 }
 
 func NewUnboundedBuffer(mem, chunk int64) Buffer {

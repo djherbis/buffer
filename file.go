@@ -53,7 +53,7 @@ func (buf *file) Read(p []byte) (n int, err error) {
 	buf.readOffset += int64(n)
 
 	if Empty(buf) {
-		buf.remove()
+		buf.Reset()
 	}
 
 	return n, err
@@ -75,8 +75,10 @@ func (buf *file) Write(p []byte) (n int, err error) {
 	return n, err
 }
 
-func (buf *file) remove() {
+func (buf *file) Reset() {
 	buf.file.Close()
 	os.Remove(buf.file.Name())
 	buf.file = nil
+	buf.readOffset = 0
+	buf.writeOffset = 0
 }

@@ -24,6 +24,13 @@ func NewMulti(buffers ...Buffer) Buffer {
 	return buf
 }
 
+func (buf *linkBuffer) Reset() {
+	if buf.hasNext {
+		buf.next.Reset()
+	}
+	buf.buffer.Reset()
+}
+
 func (buf *linkBuffer) Cap() (n int64) {
 	if buf.hasNext {
 		next := buf.next.Cap()

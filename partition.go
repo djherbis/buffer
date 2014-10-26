@@ -27,6 +27,10 @@ func (buf *partition) Cap() int64 {
 	return MaxCap()
 }
 
+func (buf *partition) Reset() {
+	ResetAll(buf.buffers)
+}
+
 func (buf *partition) Read(p []byte) (n int, err error) {
 	for len(p) > 0 {
 
