@@ -12,9 +12,22 @@ const (
 	maxAlloc  = int64(1024 * 32)
 )
 
-type Buffer interface {
+type Lener interface {
 	Len() int64
+}
+
+type Caper interface {
 	Cap() int64
+}
+
+type LenCaper interface {
+	Lener
+	Caper
+}
+
+type Buffer interface {
+	Lener
+	Caper
 	io.Reader
 	io.Writer
 }
@@ -35,34 +48,30 @@ func LimitAlloc(n int64) int64 {
 	return n
 }
 
-func Gap(buf Buffer) int64 {
+func Gap(buf LenCaper) int64 {
 	return buf.Cap() - buf.Len()
 }
 
-func Full(buf Buffer) bool {
+func Full(buf LenCaper) bool {
 	return Gap(buf) == 0
-}
-
-type Lener interface {
-	Len() int64
 }
 
 func Empty(l Lener) bool {
 	return l.Len() == 0
 }
 
-func RoomFor(buf Buffer, p []byte) bool {
+func RoomFor(buf LenCaper, p []byte) bool {
 	return Gap(buf) >= int64(len(p))
 }
 
-func ShrinkToRead(buf Buffer, p []byte) []byte {
+func ShrinkToRead(buf Lener, p []byte) []byte {
 	if buf.Len() < int64(len(p)) {
 		return p[:buf.Len()]
 	}
 	return p
 }
 
-func ShrinkToFit(buf Buffer, p []byte) []byte {
+func ShrinkToFit(buf LenCaper, p []byte) []byte {
 	if !RoomFor(buf, p) {
 		p = p[:Gap(buf)]
 	}
