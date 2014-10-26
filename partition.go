@@ -16,7 +16,7 @@ func NewPartition(chunk int64, make func(int64) Buffer) Buffer {
 		chunk: chunk,
 	}
 	buf.push()
-	return newBuffer(buf)
+	return buf
 }
 
 func (buf *partition) Len() int64 {

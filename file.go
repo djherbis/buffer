@@ -17,7 +17,7 @@ func NewFile(capacity int64) Buffer {
 	buf := &file{
 		capacity: capacity,
 	}
-	return newBuffer(buf)
+	return buf
 }
 
 func (buf *file) init() error {

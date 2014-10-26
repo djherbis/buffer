@@ -3,14 +3,12 @@ package buffer
 import (
 	"bytes"
 	"crypto/rand"
-	"fmt"
 	"io"
 	"io/ioutil"
-	"lib/test"
-	"os"
 	"testing"
 )
 
+/*
 func ExamplePartition() {
 	buf := NewPartition(1024, NewFile)
 	buf.Write([]byte("Hello world\n"))
@@ -50,6 +48,7 @@ func TestWriter(t *testing.T) {
 		t.Error("Writer failed to write random data to buffer.")
 	}
 }
+*/
 
 func TestFile(t *testing.T) {
 	buf := NewFile(1024)
