@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"io"
 	"io/ioutil"
+	"os"
 	"testing"
 )
 
@@ -49,6 +50,22 @@ func TestWriter(t *testing.T) {
 	}
 }
 */
+
+func TestWrap(t *testing.T) {
+	if file, err := ioutil.TempFile("D:\\Downloads\\temp", "wrap.test"); err == nil {
+		w := NewWrapWriter(file, 3)
+		w.Write([]byte("abcdef"))
+
+		r := NewWrapReader(file, 2)
+		data := make([]byte, 6)
+		r.Read(data)
+		if !bytes.Equal(data, []byte("dedede")) {
+			t.Error("Wrapper error!")
+		}
+		file.Close()
+		os.Remove(file.Name())
+	}
+}
 
 func TestFile(t *testing.T) {
 	buf := NewFile(1024)
