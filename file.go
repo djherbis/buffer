@@ -24,7 +24,7 @@ func NewFile(cap int64) Buffer {
 
 func (buf *file) init() error {
 	if buf.file == nil {
-		if file, err := ioutil.TempFile("", "buffer"); err == nil {
+		if file, err := ioutil.TempFile("D:\\Downloads\\temp", "buffer"); err == nil {
 			buf.file = file
 			buf.Reader = NewWrapReader(file, buf.Cap())
 			buf.Writer = NewWrapWriter(file, buf.Cap())
@@ -49,12 +49,12 @@ func (buf *file) Read(p []byte) (n int, err error) {
 	}
 
 	n, err = buf.Reader.Read(ShrinkToRead(buf, p))
+	buf.len -= int64(n)
 
 	if Empty(buf) {
 		buf.Reset()
 	}
 
-	buf.len -= int64(n)
 	return n, err
 }
 
@@ -69,15 +69,17 @@ func (buf *file) Write(p []byte) (n int, err error) {
 	}
 
 	n, err = buf.Writer.Write(ShrinkToFit(buf, p))
-
 	buf.len += int64(n)
+
 	return n, err
 }
 
 func (buf *file) Reset() {
-	buf.file.Close()
-	os.Remove(buf.file.Name())
-	buf.file = nil
-	buf.Reader = nil
-	buf.Writer = nil
+	if buf.file != nil {
+		buf.file.Close()
+		os.Remove(buf.file.Name())
+		buf.file = nil
+		buf.Reader = nil
+		buf.Writer = nil
+	}
 }
