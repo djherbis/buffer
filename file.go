@@ -1,21 +1,23 @@
 package buffer
 
 import (
+	"bytes"
 	"io"
 	"io/ioutil"
 	"os"
 )
 
 type file struct {
-	file        *os.File
-	capacity    int64
-	readOffset  int64
-	writeOffset int64
+	file *os.File
+	cap  int64
+	len  int64
+	io.Reader
+	io.Writer
 }
 
-func NewFile(capacity int64) Buffer {
+func NewFile(cap int64) Buffer {
 	buf := &file{
-		capacity: capacity,
+		cap: cap,
 	}
 	return buf
 }
@@ -24,6 +26,8 @@ func (buf *file) init() error {
 	if buf.file == nil {
 		if file, err := ioutil.TempFile("", "buffer"); err == nil {
 			buf.file = file
+			buf.Reader = NewWrapReader(file, buf.Cap())
+			buf.Writer = NewWrapWriter(file, buf.Cap())
 		} else {
 			return err
 		}
@@ -32,11 +36,11 @@ func (buf *file) init() error {
 }
 
 func (buf *file) Len() int64 {
-	return buf.writeOffset - buf.readOffset
+	return buf.len
 }
 
 func (buf *file) Cap() int64 {
-	return buf.capacity
+	return buf.cap
 }
 
 func (buf *file) Read(p []byte) (n int, err error) {
@@ -44,34 +48,29 @@ func (buf *file) Read(p []byte) (n int, err error) {
 		return 0, io.EOF
 	}
 
-	if err := buf.init(); err != nil {
-		return 0, err
-	}
-
-	buf.file.Seek(buf.readOffset, 0)
-	n, err = buf.file.Read(p)
-	buf.readOffset += int64(n)
+	n, err = buf.Reader.Read(ShrinkToRead(buf, p))
 
 	if Empty(buf) {
 		buf.Reset()
 	}
 
+	buf.len -= int64(n)
 	return n, err
 }
 
+// BUG(Dustin): Add short write
 func (buf *file) Write(p []byte) (n int, err error) {
 	if Full(buf) {
-		return 0, err
+		return 0, bytes.ErrTooLarge
 	}
 
 	if err := buf.init(); err != nil {
 		return 0, err
 	}
 
-	buf.file.Seek(buf.writeOffset, 0)
-	n, err = buf.file.Write(ShrinkToFit(buf, p))
-	buf.writeOffset += int64(n)
+	n, err = buf.Writer.Write(ShrinkToFit(buf, p))
 
+	buf.len += int64(n)
 	return n, err
 }
 
@@ -79,6 +78,6 @@ func (buf *file) Reset() {
 	buf.file.Close()
 	os.Remove(buf.file.Name())
 	buf.file = nil
-	buf.readOffset = 0
-	buf.writeOffset = 0
+	buf.Reader = nil
+	buf.Writer = nil
 }
