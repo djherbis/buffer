@@ -94,7 +94,7 @@ func runPerfectSeries(t *testing.T, buf Buffer) {
 
 	max := LimitAlloc(buf.Cap())
 	isPerfectMatch(t, buf, 0)
-	for i := int64(1); i <= 1024; i *= 2 {
+	for i := int64(1); i < max; i *= 2 {
 		isPerfectMatch(t, buf, i)
 	}
 	isPerfectMatch(t, buf, max)
