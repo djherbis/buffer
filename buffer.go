@@ -43,8 +43,12 @@ func Full(buf Buffer) bool {
 	return Gap(buf) == 0
 }
 
-func Empty(buf Buffer) bool {
-	return buf.Len() == 0
+type Lener interface {
+	Len() int64
+}
+
+func Empty(l Lener) bool {
+	return l.Len() == 0
 }
 
 func RoomFor(buf Buffer, p []byte) bool {
