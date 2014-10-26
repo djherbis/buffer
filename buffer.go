@@ -42,6 +42,10 @@ type buffer struct {
 	Buffer
 }
 
+func len64(p []byte) int64 {
+	return int64(len(p))
+}
+
 func MaxCap() int64 {
 	return maxInt64
 }
@@ -66,11 +70,11 @@ func Empty(l Lener) bool {
 }
 
 func RoomFor(buf LenCaper, p []byte) bool {
-	return Gap(buf) >= int64(len(p))
+	return Gap(buf) >= len64(p)
 }
 
 func ShrinkToRead(buf Lener, p []byte) []byte {
-	if buf.Len() < int64(len(p)) {
+	if buf.Len() < len64(p) {
 		return p[:buf.Len()]
 	}
 	return p
