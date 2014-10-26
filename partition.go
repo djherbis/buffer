@@ -5,9 +5,9 @@ import (
 )
 
 type partition struct {
-	buffers []Buffer
-	make    func(int64) Buffer
-	chunk   int64
+	BufferList
+	make  func(int64) Buffer
+	chunk int64
 }
 
 func NewPartition(chunk int64, make func(int64) Buffer) Buffer {
@@ -15,33 +15,25 @@ func NewPartition(chunk int64, make func(int64) Buffer) Buffer {
 		make:  make,
 		chunk: chunk,
 	}
-	buf.push()
+	buf.Push(buf.make(buf.chunk))
 	return buf
-}
-
-func (buf *partition) Len() int64 {
-	return TotalLen(buf.buffers)
 }
 
 func (buf *partition) Cap() int64 {
 	return MaxCap()
 }
 
-func (buf *partition) Reset() {
-	ResetAll(buf.buffers)
-}
-
 func (buf *partition) Read(p []byte) (n int, err error) {
 	for len(p) > 0 {
 
-		if len(buf.buffers) == 0 {
+		if len(buf.BufferList) == 0 {
 			return n, io.EOF
 		}
 
-		buffer := buf.buffers[0]
+		buffer := buf.BufferList[0]
 
 		if Empty(buffer) {
-			buf.pop()
+			buf.Pop()
 			continue
 		}
 
@@ -60,14 +52,14 @@ func (buf *partition) Read(p []byte) (n int, err error) {
 func (buf *partition) Write(p []byte) (n int, err error) {
 	for len(p) > 0 {
 
-		if len(buf.buffers) == 0 {
-			buf.push()
+		if len(buf.BufferList) == 0 {
+			buf.Push(buf.make(buf.chunk))
 		}
 
-		buffer := buf.buffers[len(buf.buffers)-1]
+		buffer := buf.BufferList[len(buf.BufferList)-1]
 
 		if Full(buffer) {
-			buf.push()
+			buf.Push(buf.make(buf.chunk))
 			continue
 		}
 
@@ -81,12 +73,4 @@ func (buf *partition) Write(p []byte) (n int, err error) {
 
 	}
 	return n, nil
-}
-
-func (buf *partition) push() {
-	buf.buffers = append(buf.buffers, buf.make(buf.chunk))
-}
-
-func (buf *partition) pop() {
-	buf.buffers = buf.buffers[1:]
 }
