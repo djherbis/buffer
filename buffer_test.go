@@ -9,48 +9,6 @@ import (
 	"testing"
 )
 
-/*
-func ExamplePartition() {
-	buf := NewPartition(1024, NewFile)
-	buf.Write([]byte("Hello world\n"))
-
-	try := 2
-
-	w := test.NewBadWriter(os.Stdout, test.CountDown(try))
-
-	var err error
-	_, err = io.Copy(w, buf)
-	for i := 0; i < try && err != nil; i++ {
-		fmt.Println("Retrying...", err.Error())
-		_, err = io.Copy(w, buf)
-	}
-	// Output:
-	// Retrying... Too lazy, ask me 1 more times.
-	// Retrying... Too lazy, ask me 0 more times.
-	// Hello world
-}
-
-func TestWriter(t *testing.T) {
-	buf := NewPartition(1024, NewFile)
-	buf2 := bytes.NewBuffer(nil)
-	try := 100
-	bw := test.NewBadWriter(buf2, test.CountDown(try))
-	w := NewWriter(bw, buf)
-
-	r := io.LimitReader(rand.Reader, 1024*10)
-	tee := io.TeeReader(r, w)
-
-	read, _ := ioutil.ReadAll(tee)
-	for i := 0; i < try && w.Close() != nil; i++ {
-	}
-	wrote, _ := ioutil.ReadAll(buf2)
-
-	if !bytes.Equal(wrote, read) {
-		t.Error("Writer failed to write random data to buffer.")
-	}
-}
-*/
-
 func TestWrap(t *testing.T) {
 	if file, err := ioutil.TempFile("D:\\Downloads\\temp", "wrap.test"); err == nil {
 		w := NewWrapWriter(file, 3)
