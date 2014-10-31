@@ -12,7 +12,9 @@ type file struct {
 	cap  int64
 	len  int64
 	io.Reader
+	io.ReaderAt
 	io.Writer
+	io.WriterAt
 }
 
 func NewFile(cap int64) Buffer {
@@ -26,8 +28,12 @@ func (buf *file) init() error {
 	if buf.file == nil {
 		if file, err := ioutil.TempFile("D:\\Downloads\\temp", "buffer"); err == nil {
 			buf.file = file
-			buf.Reader = NewWrapReader(file, buf.Cap())
-			buf.Writer = NewWrapWriter(file, buf.Cap())
+			r := NewWrapReader(file, buf.Cap())
+			buf.Reader = r
+			buf.ReaderAt = r
+			w := NewWrapWriter(file, buf.Cap())
+			buf.Writer = w
+			buf.WriterAt = w
 		} else {
 			return err
 		}
