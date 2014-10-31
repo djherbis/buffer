@@ -12,62 +12,78 @@ type wrapper struct {
 	do     ByteFunc
 }
 
-type wrapWriter struct {
+type WrapWriter struct {
 	wrapper
 }
 
-func NewWrapWriter(w io.WriteSeeker, wrapAt int64) io.Writer {
-	return &wrapWriter{wrapper{
+func NewWrapWriter(w io.WriteSeeker, wrapAt int64) *WrapWriter {
+	return &WrapWriter{wrapper{
 		seek:   w.Seek,
 		do:     w.Write,
 		wrapAt: wrapAt,
 	}}
 }
 
-func (w *wrapWriter) Write(p []byte) (n int, err error) {
-	return w.Wrap(p)
+func (w *WrapWriter) Write(p []byte) (n int, err error) {
+	n, err = w.Wrap(p, w.off)
+	w.off = (w.off + int64(n)) % w.wrapAt
+	return n, err
 }
 
-type wrapReader struct {
+func (w *WrapWriter) WriteAt(p []byte, off int64) (n int, err error) {
+	return w.Wrap(p, off)
+}
+
+type WrapReader struct {
 	wrapper
 }
 
-func NewWrapReader(r io.ReadSeeker, wrapAt int64) io.Reader {
-	return &wrapReader{wrapper{
+func NewWrapReader(r io.ReadSeeker, wrapAt int64) *WrapReader {
+	return &WrapReader{wrapper{
 		seek:   r.Seek,
 		do:     r.Read,
 		wrapAt: wrapAt,
 	}}
 }
 
-func (w *wrapReader) Read(p []byte) (n int, err error) {
-	return w.Wrap(p)
+func (w *WrapReader) Read(p []byte) (n int, err error) {
+	n, err = w.Wrap(p, w.off)
+	w.off = (w.off + int64(n)) % w.wrapAt
+	return n, err
 }
 
-func (w *wrapper) Wrap(p []byte) (n int, err error) {
+func (w *WrapReader) ReadAt(p []byte, off int64) (n int, err error) {
+	return w.Wrap(p, off)
+}
+
+func (w *wrapper) Seek(off int64, rel int) (int64, error) {
+	return w.seek(off, rel)
+}
+
+func (w *wrapper) Wrap(p []byte, off int64) (n int, err error) {
 	var m int
 
 	for len(p) > 0 {
 
-		w.seek(w.off, 0)
+		w.seek(off, 0)
 
-		if w.off+len64(p) <= w.wrapAt {
+		if off+len64(p) <= w.wrapAt {
 			if m, err = w.do(p); err != nil {
 				return n + m, err
 			}
 		} else {
-			space := w.wrapAt - w.off
+			space := w.wrapAt - off
 			if m, err = w.do(p[:space]); err != nil {
 				return n + m, err
 			}
 		}
 
 		n += m
-		w.off += int64(m)
+		off += int64(m)
 		p = p[m:]
 
-		if w.off == w.wrapAt {
-			w.off = 0
+		if off == w.wrapAt {
+			off = 0
 		}
 	}
 

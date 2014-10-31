@@ -88,7 +88,7 @@ func simple(t *testing.T, buf Buffer) {
 	buf.Write([]byte(" yolo"))
 	data, _ = ioutil.ReadAll(buf)
 	if !bytes.Equal([]byte("lo world yolo"), data) {
-		t.Error("Buffer crossing error :(")
+		t.Error("Buffer crossing error :(", string(data))
 	}
 }
 
