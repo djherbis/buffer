@@ -14,10 +14,11 @@ type wrapper struct {
 
 type WrapWriter wrapper
 
-func NewWrapWriter(w io.WriteSeeker, wrapAt int64) *WrapWriter {
+func NewWrapWriter(w io.WriteSeeker, off int64, wrapAt int64) *WrapWriter {
 	return &WrapWriter{
 		seek:   w.Seek,
 		do:     w.Write,
+		off:    off,
 		wrapAt: wrapAt,
 	}
 }
@@ -34,10 +35,11 @@ func (w *WrapWriter) WriteAt(p []byte, off int64) (n int, err error) {
 
 type WrapReader wrapper
 
-func NewWrapReader(r io.ReadSeeker, wrapAt int64) *WrapReader {
+func NewWrapReader(r io.ReadSeeker, off int64, wrapAt int64) *WrapReader {
 	return &WrapReader{
 		seek:   r.Seek,
 		do:     r.Read,
+		off:    off,
 		wrapAt: wrapAt,
 	}
 }

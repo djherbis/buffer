@@ -11,10 +11,10 @@ import (
 
 func TestWrap(t *testing.T) {
 	if file, err := ioutil.TempFile("D:\\Downloads\\temp", "wrap.test"); err == nil {
-		w := NewWrapWriter(file, 3)
+		w := NewWrapWriter(file, 0, 3)
 		w.Write([]byte("abcdef"))
 
-		r := NewWrapReader(file, 2)
+		r := NewWrapReader(file, 0, 2)
 		data := make([]byte, 6)
 		r.Read(data)
 		if !bytes.Equal(data, []byte("dedede")) {

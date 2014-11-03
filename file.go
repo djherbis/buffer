@@ -28,10 +28,10 @@ func (buf *FileBuffer) init() error {
 	if buf.file == nil {
 		if file, err := ioutil.TempFile("D:\\Downloads\\temp", "buffer"); err == nil {
 			buf.file = file
-			r := NewWrapReader(file, buf.Cap())
+			r := NewWrapReader(file, 0, buf.Cap())
 			buf.Reader = r
 			buf.ReaderAt = r
-			w := NewWrapWriter(file, buf.Cap())
+			w := NewWrapWriter(file, 0, buf.Cap())
 			buf.Writer = w
 			buf.WriterAt = w
 		} else {
