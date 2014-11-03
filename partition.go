@@ -4,26 +4,24 @@ import (
 	"io"
 )
 
-type partition struct {
+type Partition struct {
 	BufferList
-	make  func(int64) Buffer
-	chunk int64
+	make func() Buffer
 }
 
-func NewPartition(chunk int64, make func(int64) Buffer) Buffer {
-	buf := &partition{
-		make:  make,
-		chunk: chunk,
+func NewPartition(make func() Buffer, buffers ...Buffer) *Partition {
+	buf := &Partition{
+		make:       make,
+		BufferList: buffers,
 	}
-	buf.Push(buf.make(buf.chunk))
 	return buf
 }
 
-func (buf *partition) Cap() int64 {
+func (buf *Partition) Cap() int64 {
 	return MaxCap()
 }
 
-func (buf *partition) Read(p []byte) (n int, err error) {
+func (buf *Partition) Read(p []byte) (n int, err error) {
 	for len(p) > 0 {
 
 		if len(buf.BufferList) == 0 {
@@ -49,17 +47,17 @@ func (buf *partition) Read(p []byte) (n int, err error) {
 	return n, nil
 }
 
-func (buf *partition) Write(p []byte) (n int, err error) {
+func (buf *Partition) Write(p []byte) (n int, err error) {
 	for len(p) > 0 {
 
 		if len(buf.BufferList) == 0 {
-			buf.Push(buf.make(buf.chunk))
+			buf.Push(buf.make())
 		}
 
 		buffer := buf.BufferList[len(buf.BufferList)-1]
 
 		if Full(buffer) {
-			buf.Push(buf.make(buf.chunk))
+			buf.Push(buf.make())
 			continue
 		}
 

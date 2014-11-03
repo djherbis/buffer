@@ -116,5 +116,6 @@ func ResetAll(buffers []Buffer) {
 }
 
 func NewUnboundedBuffer(mem, chunk int64) Buffer {
-	return NewMulti(New(mem), NewPartition(chunk, NewFile))
+	return NewMulti(New(mem),
+		NewPartition(func() Buffer { return NewFile(chunk) }))
 }

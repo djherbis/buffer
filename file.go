@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-type file struct {
+type FileBuffer struct {
 	file *os.File
 	cap  int64
 	len  int64
@@ -17,14 +17,14 @@ type file struct {
 	io.WriterAt
 }
 
-func NewFile(cap int64) Buffer {
-	buf := &file{
+func NewFile(cap int64) *FileBuffer {
+	buf := &FileBuffer{
 		cap: cap,
 	}
 	return buf
 }
 
-func (buf *file) init() error {
+func (buf *FileBuffer) init() error {
 	if buf.file == nil {
 		if file, err := ioutil.TempFile("D:\\Downloads\\temp", "buffer"); err == nil {
 			buf.file = file
@@ -41,15 +41,15 @@ func (buf *file) init() error {
 	return nil
 }
 
-func (buf *file) Len() int64 {
+func (buf *FileBuffer) Len() int64 {
 	return buf.len
 }
 
-func (buf *file) Cap() int64 {
+func (buf *FileBuffer) Cap() int64 {
 	return buf.cap
 }
 
-func (buf *file) Read(p []byte) (n int, err error) {
+func (buf *FileBuffer) Read(p []byte) (n int, err error) {
 	if Empty(buf) {
 		return 0, io.EOF
 	}
@@ -65,7 +65,7 @@ func (buf *file) Read(p []byte) (n int, err error) {
 }
 
 // BUG(Dustin): Add short write
-func (buf *file) Write(p []byte) (n int, err error) {
+func (buf *FileBuffer) Write(p []byte) (n int, err error) {
 	if Full(buf) {
 		return 0, bytes.ErrTooLarge
 	}
@@ -80,7 +80,7 @@ func (buf *file) Write(p []byte) (n int, err error) {
 	return n, err
 }
 
-func (buf *file) Reset() {
+func (buf *FileBuffer) Reset() {
 	if buf.file != nil {
 		buf.file.Close()
 		os.Remove(buf.file.Name())
