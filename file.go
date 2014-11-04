@@ -8,13 +8,11 @@ import (
 )
 
 type FileBuffer struct {
-	file *os.File
-	cap  int64
-	len  int64
-	io.Reader
-	io.ReaderAt
-	io.Writer
-	io.WriterAt
+	file        *os.File
+	cap         int64
+	len         int64
+	readOffset  int64
+	writeOffset int64
 }
 
 func NewFile(cap int64) *FileBuffer {
@@ -28,12 +26,8 @@ func (buf *FileBuffer) init() error {
 	if buf.file == nil {
 		if file, err := ioutil.TempFile("D:\\Downloads\\temp", "buffer"); err == nil {
 			buf.file = file
-			r := NewWrapReader(file, 0, buf.Cap())
-			buf.Reader = r
-			buf.ReaderAt = r
-			w := NewWrapWriter(file, 0, buf.Cap())
-			buf.Writer = w
-			buf.WriterAt = w
+			buf.readOffset = 0
+			buf.writeOffset = 0
 		} else {
 			return err
 		}
@@ -49,13 +43,21 @@ func (buf *FileBuffer) Cap() int64 {
 	return buf.cap
 }
 
+func (buf *FileBuffer) ReadAt(p []byte, off int64) (n int, err error) {
+	if Empty(buf) {
+		return 0, io.EOF
+	}
+	return Wrap(buf.file.Seek, buf.file.Read, ShrinkToRead(buf, p), off, buf.Cap())
+}
+
 func (buf *FileBuffer) Read(p []byte) (n int, err error) {
 	if Empty(buf) {
 		return 0, io.EOF
 	}
 
-	n, err = buf.Reader.Read(ShrinkToRead(buf, p))
+	n, err = Wrap(buf.file.Seek, buf.file.Read, ShrinkToRead(buf, p), buf.readOffset, buf.Cap())
 	buf.len -= int64(n)
+	buf.readOffset = (buf.readOffset + int64(n)) % buf.Cap()
 
 	if Empty(buf) {
 		buf.Reset()
@@ -74,8 +76,9 @@ func (buf *FileBuffer) Write(p []byte) (n int, err error) {
 		return 0, err
 	}
 
-	n, err = buf.Writer.Write(ShrinkToFit(buf, p))
+	n, err = Wrap(buf.file.Seek, buf.file.Write, ShrinkToFit(buf, p), buf.writeOffset, buf.Cap())
 	buf.len += int64(n)
+	buf.writeOffset = (buf.writeOffset + int64(n)) % buf.Cap()
 
 	return n, err
 }
@@ -85,7 +88,15 @@ func (buf *FileBuffer) Reset() {
 		buf.file.Close()
 		os.Remove(buf.file.Name())
 		buf.file = nil
-		buf.Reader = nil
-		buf.Writer = nil
+		buf.readOffset = 0
+		buf.writeOffset = 0
 	}
+}
+
+func (buf *FileBuffer) FastForward(n int) int {
+	if int64(n) > buf.Len() {
+		n = int(buf.Len())
+	}
+
+	return n
 }

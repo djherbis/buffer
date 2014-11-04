@@ -9,6 +9,17 @@ import (
 	"testing"
 )
 
+func TestFF(t *testing.T) {
+	buf := New(10)
+	buf.Write([]byte("Hello"))
+	buf.FastForward(1)
+	data := make([]byte, 4)
+	buf.Read(data)
+	if !bytes.Equal(data, []byte("ello")) {
+		t.Error("FastForward error!")
+	}
+}
+
 func TestWrap(t *testing.T) {
 	if file, err := ioutil.TempFile("D:\\Downloads\\temp", "wrap.test"); err == nil {
 		w := NewWrapWriter(file, 0, 3)

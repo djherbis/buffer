@@ -7,12 +7,13 @@ import (
 
 type MemBuffer struct {
 	limit int64
-	bytes.Buffer
+	*bytes.Buffer
 }
 
 func New(n int64) *MemBuffer {
 	return &MemBuffer{
-		limit: n,
+		limit:  n,
+		Buffer: bytes.NewBuffer(nil),
 	}
 }
 
@@ -39,4 +40,14 @@ func (buf *MemBuffer) Read(p []byte) (n int, err error) {
 		err = io.EOF
 	}
 	return n, err
+}
+
+func (buf *MemBuffer) FastForward(n int) int {
+	data := buf.Bytes()
+	if n > len(data) {
+		n = len(data)
+	}
+	b := bytes.NewBuffer(data[n:])
+	buf.Buffer = b
+	return n
 }
