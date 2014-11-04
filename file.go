@@ -98,5 +98,7 @@ func (buf *FileBuffer) FastForward(n int) int {
 		n = int(buf.Len())
 	}
 
+	buf.readOffset = (buf.readOffset + int64(n)) % buf.Cap()
+
 	return n
 }

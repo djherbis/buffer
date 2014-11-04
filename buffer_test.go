@@ -10,7 +10,7 @@ import (
 )
 
 func TestFF(t *testing.T) {
-	buf := New(10)
+	buf := NewFile(10)
 	buf.Write([]byte("Hello"))
 	buf.FastForward(1)
 	data := make([]byte, 4)
