@@ -9,6 +9,16 @@ import (
 	"testing"
 )
 
+func TestReadAt(t *testing.T) {
+	buf := NewFile(11)
+	buf.Write([]byte("Hello World"))
+	data := make([]byte, 10)
+	n, _ := buf.ReadAt(data, 6)
+	if !bytes.Equal(data[:n], []byte("World")) {
+		t.Error("ReadAt Failed.")
+	}
+}
+
 func TestFF(t *testing.T) {
 	buf := NewFile(10)
 	buf.Write([]byte("Hello"))

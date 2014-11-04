@@ -44,9 +44,14 @@ func (buf *FileBuffer) Cap() int64 {
 }
 
 func (buf *FileBuffer) ReadAt(p []byte, off int64) (n int, err error) {
-	if Empty(buf) {
+	if Empty(buf) || buf.Len() < off {
 		return 0, io.EOF
 	}
+
+	if len64(p) > buf.Len()-off {
+		p = p[:buf.Len()-off]
+	}
+
 	return Wrap(buf.file.Seek, buf.file.Read, ShrinkToRead(buf, p), off, buf.Cap())
 }
 
