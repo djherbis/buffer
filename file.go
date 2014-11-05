@@ -32,7 +32,7 @@ func (buf *FileBuffer) init() (err error) {
 			if file, err = os.OpenFile(buf.Filename, os.O_CREATE|os.O_RDWR, 0644); err != nil {
 				return err
 			}
-		} else if file, err = ioutil.TempFile("D:\\Downloads\\temp", "buffer"); err != nil {
+		} else if file, err = ioutil.TempFile("", "buffer"); err != nil {
 			return err
 		}
 
