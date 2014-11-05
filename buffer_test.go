@@ -19,7 +19,6 @@ func TestFull(t *testing.T) {
 			t.Error("SpillBuffer failed")
 		}
 	}
-	buf.Reset()
 }
 
 func TestGob(t *testing.T) {
