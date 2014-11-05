@@ -7,16 +7,16 @@ import (
 )
 
 type FileBuffer struct {
-	file        *os.File
-	cap         int64
-	len         int64
-	readOffset  int64
-	writeOffset int64
+	file *os.File
+	N    int64
+	L    int64
+	ROff int64
+	WOff int64
 }
 
-func NewFile(cap int64) *FileBuffer {
+func NewFile(N int64) *FileBuffer {
 	buf := &FileBuffer{
-		cap: cap,
+		N: N,
 	}
 	return buf
 }
@@ -25,8 +25,8 @@ func (buf *FileBuffer) init() error {
 	if buf.file == nil {
 		if file, err := ioutil.TempFile("D:\\Downloads\\temp", "buffer"); err == nil {
 			buf.file = file
-			buf.readOffset = 0
-			buf.writeOffset = 0
+			buf.ROff = 0
+			buf.WOff = 0
 		} else {
 			return err
 		}
@@ -35,11 +35,11 @@ func (buf *FileBuffer) init() error {
 }
 
 func (buf *FileBuffer) Len() int64 {
-	return buf.len
+	return buf.L
 }
 
 func (buf *FileBuffer) Cap() int64 {
-	return buf.cap
+	return buf.N
 }
 
 func (buf *FileBuffer) ReadAt(p []byte, off int64) (n int, err error) {
@@ -49,12 +49,12 @@ func (buf *FileBuffer) ReadAt(p []byte, off int64) (n int, err error) {
 }
 
 func (buf *FileBuffer) Read(p []byte) (n int, err error) {
-	wrap := NewWrapReader(buf.file, buf.readOffset, buf.Cap())
+	wrap := NewWrapReader(buf.file, buf.ROff, buf.Cap())
 	r := io.LimitReader(wrap, buf.Len())
 
 	n, err = r.Read(p)
-	buf.len -= int64(n)
-	buf.readOffset = (buf.readOffset + int64(n)) % buf.Cap()
+	buf.L -= int64(n)
+	buf.ROff = (buf.ROff + int64(n)) % buf.Cap()
 
 	if Empty(buf) {
 		buf.Reset()
@@ -69,11 +69,11 @@ func (buf *FileBuffer) Write(p []byte) (n int, err error) {
 		return 0, err
 	}
 
-	wrap := NewWrapWriter(buf.file, buf.writeOffset, buf.Cap())
+	wrap := NewWrapWriter(buf.file, buf.WOff, buf.Cap())
 	w := LimitWriter(wrap, Gap(buf))
 	n, err = w.Write(p)
-	buf.len += int64(n)
-	buf.writeOffset = (buf.writeOffset + int64(n)) % buf.Cap()
+	buf.L += int64(n)
+	buf.WOff = (buf.WOff + int64(n)) % buf.Cap()
 
 	return n, err
 }
@@ -83,8 +83,8 @@ func (buf *FileBuffer) Reset() {
 		buf.file.Close()
 		os.Remove(buf.file.Name())
 		buf.file = nil
-		buf.readOffset = 0
-		buf.writeOffset = 0
+		buf.ROff = 0
+		buf.WOff = 0
 	}
 }
 
@@ -93,8 +93,8 @@ func (buf *FileBuffer) FastForward(n int) int {
 		n = int(buf.Len())
 	}
 
-	buf.len -= int64(n)
-	buf.readOffset = (buf.readOffset + int64(n)) % buf.Cap()
+	buf.L -= int64(n)
+	buf.ROff = (buf.ROff + int64(n)) % buf.Cap()
 
 	return n
 }

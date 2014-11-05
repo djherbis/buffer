@@ -6,19 +6,19 @@ import (
 )
 
 type MemBuffer struct {
-	limit int64
+	N int64
 	*bytes.Buffer
 }
 
 func New(n int64) *MemBuffer {
 	return &MemBuffer{
-		limit:  n,
+		N:      n,
 		Buffer: bytes.NewBuffer(nil),
 	}
 }
 
 func (buf *MemBuffer) Cap() int64 {
-	return buf.limit
+	return buf.N
 }
 
 func (buf *MemBuffer) Len() int64 {

@@ -6,9 +6,9 @@ import (
 )
 
 type LinkBuffer struct {
-	buffer  Buffer
-	next    Buffer
-	hasNext bool
+	Buf     Buffer
+	Next    Buffer
+	HasNext bool
 }
 
 func NewMulti(buffers ...Buffer) *LinkBuffer {
@@ -17,58 +17,58 @@ func NewMulti(buffers ...Buffer) *LinkBuffer {
 	}
 
 	buf := &LinkBuffer{
-		buffer:  buffers[0],
-		next:    NewMulti(buffers[1:]...),
-		hasNext: len(buffers[1:]) != 0,
+		Buf:     buffers[0],
+		Next:    NewMulti(buffers[1:]...),
+		HasNext: len(buffers[1:]) != 0,
 	}
 
 	return buf
 }
 
 func (buf *LinkBuffer) Reset() {
-	if buf.hasNext {
-		buf.next.Reset()
+	if buf.HasNext {
+		buf.Next.Reset()
 	}
-	buf.buffer.Reset()
+	buf.Buf.Reset()
 }
 
 func (buf *LinkBuffer) Cap() (n int64) {
-	if buf.hasNext {
-		next := buf.next.Cap()
-		if buf.buffer.Cap() > MaxCap()-next {
+	if buf.HasNext {
+		Next := buf.Next.Cap()
+		if buf.Buf.Cap() > MaxCap()-Next {
 			return MaxCap()
 		} else {
-			return buf.buffer.Cap() + next
+			return buf.Buf.Cap() + Next
 		}
 	}
 
-	return buf.buffer.Cap()
+	return buf.Buf.Cap()
 }
 
 func (buf *LinkBuffer) Len() (n int64) {
-	if buf.hasNext {
-		next := buf.next.Len()
-		if buf.buffer.Len() > MaxCap()-next {
+	if buf.HasNext {
+		Next := buf.Next.Len()
+		if buf.Buf.Len() > MaxCap()-Next {
 			return MaxCap()
 		} else {
-			return buf.buffer.Len() + next
+			return buf.Buf.Len() + Next
 		}
 	}
 
-	return buf.buffer.Len()
+	return buf.Buf.Len()
 }
 
 func (buf *LinkBuffer) ReadAt(p []byte, off int64) (n int, err error) {
-	n, err = buf.buffer.ReadAt(p, off)
+	n, err = buf.Buf.ReadAt(p, off)
 	p = p[n:]
 
-	if len(p) > 0 && buf.hasNext && (err == nil || err == io.EOF) {
-		if off > buf.buffer.Len() {
-			off -= buf.buffer.Len()
+	if len(p) > 0 && buf.HasNext && (err == nil || err == io.EOF) {
+		if off > buf.Buf.Len() {
+			off -= buf.Buf.Len()
 		} else {
 			off = 0
 		}
-		m, err := buf.next.ReadAt(p, off)
+		m, err := buf.Next.ReadAt(p, off)
 		n += m
 		if err != nil {
 			return n, err
@@ -79,15 +79,15 @@ func (buf *LinkBuffer) ReadAt(p []byte, off int64) (n int, err error) {
 }
 
 func (buf *LinkBuffer) FastForward(n int) int {
-	m := buf.buffer.FastForward(n)
+	m := buf.Buf.FastForward(n)
 
-	if n > m && buf.hasNext {
-		m += buf.next.FastForward(n - m)
+	if n > m && buf.HasNext {
+		m += buf.Next.FastForward(n - m)
 	}
 
-	for !Full(buf.buffer) && buf.hasNext && !Empty(buf.next) {
-		r := io.LimitReader(buf.next, Gap(buf.buffer))
-		if _, err := io.Copy(buf.buffer, r); err != nil && err != io.EOF {
+	for !Full(buf.Buf) && buf.HasNext && !Empty(buf.Next) {
+		r := io.LimitReader(buf.Next, Gap(buf.Buf))
+		if _, err := io.Copy(buf.Buf, r); err != nil && err != io.EOF {
 			return m
 		}
 	}
@@ -96,19 +96,19 @@ func (buf *LinkBuffer) FastForward(n int) int {
 }
 
 func (buf *LinkBuffer) Read(p []byte) (n int, err error) {
-	n, err = buf.buffer.Read(p)
+	n, err = buf.Buf.Read(p)
 	p = p[n:]
-	if len(p) > 0 && buf.hasNext && (err == nil || err == io.EOF) {
-		m, err := buf.next.Read(p)
+	if len(p) > 0 && buf.HasNext && (err == nil || err == io.EOF) {
+		m, err := buf.Next.Read(p)
 		n += m
 		if err != nil {
 			return n, err
 		}
 	}
 
-	for !Full(buf.buffer) && buf.hasNext && !Empty(buf.next) {
-		r := io.LimitReader(buf.next, Gap(buf.buffer))
-		if _, err = io.Copy(buf.buffer, r); err != nil && err != io.EOF {
+	for !Full(buf.Buf) && buf.HasNext && !Empty(buf.Next) {
+		r := io.LimitReader(buf.Next, Gap(buf.Buf))
+		if _, err = io.Copy(buf.Buf, r); err != nil && err != io.EOF {
 			return n, err
 		}
 	}
@@ -116,12 +116,12 @@ func (buf *LinkBuffer) Read(p []byte) (n int, err error) {
 }
 
 func (buf *LinkBuffer) Write(p []byte) (n int, err error) {
-	if n, err = buf.buffer.Write(p); err == bytes.ErrTooLarge && buf.hasNext {
+	if n, err = buf.Buf.Write(p); err == bytes.ErrTooLarge && buf.HasNext {
 		err = nil
 	}
 	p = p[n:]
-	if len(p) > 0 && buf.hasNext && err == nil {
-		m, err := buf.next.Write(p)
+	if len(p) > 0 && buf.HasNext && err == nil {
+		m, err := buf.Next.Write(p)
 		n += m
 		if err != nil {
 			return n, err
