@@ -2,76 +2,81 @@ package buffer
 
 import "io"
 
-type SeekFunc func(int64, int) (int64, error)
-type ByteFunc func([]byte) (int, error)
+type DoerAt interface {
+	DoAt([]byte, int64) (int, error)
+}
+type DoAtFunc func([]byte, int64) (int, error)
 
 type wrapper struct {
 	off    int64
 	wrapAt int64
-	seek   SeekFunc
-	do     ByteFunc
+	doat   DoAtFunc
 }
 
-type WrapWriter wrapper
+func (w *wrapper) DoAt(p []byte, off int64) (n int, err error) {
+	return w.doat(p, off)
+}
 
-func NewWrapWriter(w io.WriteSeeker, off int64, wrapAt int64) *WrapWriter {
+type WrapWriter struct {
+	*wrapper
+}
+
+func NewWrapWriter(w io.WriterAt, off int64, wrapAt int64) *WrapWriter {
 	return &WrapWriter{
-		seek:   w.Seek,
-		do:     w.Write,
-		off:    off,
-		wrapAt: wrapAt,
+		&wrapper{
+			doat:   w.WriteAt,
+			off:    off,
+			wrapAt: wrapAt,
+		},
 	}
 }
 
 func (w *WrapWriter) Write(p []byte) (n int, err error) {
-	n, err = Wrap(w.seek, w.do, p, w.off, w.wrapAt)
+	n, err = Wrap(w, p, w.off, w.wrapAt)
 	w.off = (w.off + int64(n)) % w.wrapAt
 	return n, err
 }
 
 func (w *WrapWriter) WriteAt(p []byte, off int64) (n int, err error) {
-	return Wrap(w.seek, w.do, p, off, w.wrapAt)
+	return Wrap(w, p, off, w.wrapAt)
 }
 
-type WrapReader wrapper
+type WrapReader struct {
+	*wrapper
+}
 
-func NewWrapReader(r io.ReadSeeker, off int64, wrapAt int64) *WrapReader {
+func NewWrapReader(r io.ReaderAt, off int64, wrapAt int64) *WrapReader {
 	return &WrapReader{
-		seek:   r.Seek,
-		do:     r.Read,
-		off:    off,
-		wrapAt: wrapAt,
+		&wrapper{
+			doat:   r.ReadAt,
+			off:    off,
+			wrapAt: wrapAt,
+		},
 	}
 }
 
 func (r *WrapReader) Read(p []byte) (n int, err error) {
-	n, err = Wrap(r.seek, r.do, p, r.off, r.wrapAt)
+	n, err = Wrap(r, p, r.off, r.wrapAt)
 	r.off = (r.off + int64(n)) % r.wrapAt
 	return n, err
 }
 
 func (r *WrapReader) ReadAt(p []byte, off int64) (n int, err error) {
-	return Wrap(r.seek, r.do, p, off, r.wrapAt)
+	return Wrap(r, p, off, r.wrapAt)
 }
 
-func (w *wrapper) Seek(off int64, rel int) (int64, error) {
-	return w.seek(off, rel)
-}
-
-func Wrap(seek SeekFunc, do ByteFunc, p []byte, off int64, wrapAt int64) (n int, err error) {
+func Wrap(w DoerAt, p []byte, off int64, wrapAt int64) (n int, err error) {
 	var m int
 
 	for len(p) > 0 {
 
-		seek(off, 0)
-
 		if off+len64(p) <= wrapAt {
-			if m, err = do(p); err != nil {
+			if m, err = w.DoAt(p, off); err != nil {
 				return n + m, err
 			}
 		} else {
 			space := wrapAt - off
-			if m, err = do(p[:space]); err != nil {
+			if m, err = w.DoAt(p[:space], off); err != nil {
 				return n + m, err
 			}
 		}
