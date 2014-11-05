@@ -107,7 +107,7 @@ func (buf *FileBuffer) Reset() {
 	}
 }
 
-func (buf *FileBuffer) FastForward(n int) int {
+func (buf *FileBuffer) FFwd(n int) int {
 	if int64(n) > buf.Len() {
 		n = int(buf.Len())
 	}

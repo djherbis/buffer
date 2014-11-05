@@ -57,11 +57,11 @@ func TestReadAt(t *testing.T) {
 func TestFF(t *testing.T) {
 	buf := NewMulti(New(2), New(2), New(2), New(2), New(2), New(2), New(2))
 	buf.Write([]byte("Hello"))
-	buf.FastForward(3)
+	buf.FFwd(3)
 	data := make([]byte, 4)
 	n, _ := buf.Read(data)
 	if !bytes.Equal(data[:n], []byte("lo")) {
-		t.Error("FastForward error! " + string(data))
+		t.Error("FFwd error! " + string(data))
 	}
 }
 

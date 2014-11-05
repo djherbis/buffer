@@ -79,11 +79,11 @@ func (buf *LinkBuffer) ReadAt(p []byte, off int64) (n int, err error) {
 	return n, err
 }
 
-func (buf *LinkBuffer) FastForward(n int) int {
-	m := buf.Buf.FastForward(n)
+func (buf *LinkBuffer) FFwd(n int) int {
+	m := buf.Buf.FFwd(n)
 
 	if n > m && buf.HasNext {
-		m += buf.Next.FastForward(n - m)
+		m += buf.Next.FFwd(n - m)
 	}
 
 	for !Full(buf.Buf) && buf.HasNext && !Empty(buf.Next) {

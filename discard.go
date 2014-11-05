@@ -34,7 +34,7 @@ func (buf *Discard) Write(p []byte) (int, error) {
 	return ioutil.Discard.Write(p)
 }
 
-func (buf *Discard) FastForward(n int) int {
+func (buf *Discard) FFwd(n int) int {
 	return 0
 }
 

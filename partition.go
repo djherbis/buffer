@@ -59,7 +59,7 @@ func (buf *Partition) ReadAt(p []byte, off int64) (n int, err error) {
 	return n, nil
 }
 
-func (buf *Partition) FastForward(n int) (m int) {
+func (buf *Partition) FFwd(n int) (m int) {
 	for n > m {
 		if len(buf.BufferList) == 0 {
 			return m
@@ -72,7 +72,7 @@ func (buf *Partition) FastForward(n int) (m int) {
 			continue
 		}
 
-		m += buffer.FastForward(n - m)
+		m += buffer.FFwd(n - m)
 	}
 
 	return m

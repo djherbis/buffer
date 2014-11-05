@@ -39,7 +39,7 @@ func (buf *MemBuffer) Read(p []byte) (n int, err error) {
 	return io.LimitReader(buf.Buffer, buf.Len()).Read(p)
 }
 
-func (buf *MemBuffer) FastForward(n int) int {
+func (buf *MemBuffer) FFwd(n int) int {
 	data := buf.Bytes()
 	if n > len(data) {
 		n = len(data)
