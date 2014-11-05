@@ -10,6 +10,24 @@ import (
 	"testing"
 )
 
+func TestWriteAt(t *testing.T) {
+	buf := NewFile(6)
+
+	if _, err := buf.Write([]byte("abc")); err != nil {
+		t.Error(err.Error())
+	}
+
+	if _, err := buf.WriteAt([]byte("def"), 2); err != nil {
+		t.Error(err.Error())
+	}
+
+	if data, err := ioutil.ReadAll(buf); err != nil {
+		t.Error(err.Error())
+	} else if !bytes.Equal(data, []byte("abdef")) {
+		t.Error("Not adef: " + string(data))
+	}
+}
+
 func TestFull(t *testing.T) {
 	filebuf := NewFile(3)
 	filebuf.Filename = "/dev/full"

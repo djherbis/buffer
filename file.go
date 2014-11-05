@@ -96,6 +96,20 @@ func (buf *FileBuffer) Write(p []byte) (n int, err error) {
 	return n, err
 }
 
+func (buf *FileBuffer) WriteAt(p []byte, off int64) (n int, err error) {
+	if err := buf.init(); err != nil {
+		return 0, err
+	}
+
+	wrap := NewWrapWriter(buf.file, off, buf.Cap())
+	w := LimitWriter(wrap, buf.Cap()-off)
+	n, err = w.Write(p)
+	if off+int64(n) > buf.Len() {
+		buf.L = int64(n) + off
+	}
+	return n, err
+}
+
 func (buf *FileBuffer) Reset() {
 	if buf.file != nil {
 		buf.file.Close()

@@ -31,8 +31,23 @@ func (buf *MemBuffer) Write(p []byte) (n int, err error) {
 	return LimitWriter(buf.Buffer, Gap(buf)).Write(p)
 }
 
-func (buf *MemBuffer) ReadAt(b []byte, off int64) (n int, err error) {
-	return bytes.NewReader(buf.Bytes()).ReadAt(b, off)
+// Must Add io.ErrShortWrite
+func (buf *MemBuffer) WriteAt(p []byte, off int64) (n int, err error) {
+	if off > buf.Len() {
+		return 0, bytes.ErrTooLarge
+	} else if len64(p)+off < buf.Len() {
+		d := buf.Bytes()[off:]
+		return copy(d, p), nil
+	} else {
+		d := buf.Bytes()[off:]
+		n = copy(d, p)
+		m, err := buf.Write(p[n:])
+		return n + m, err
+	}
+}
+
+func (buf *MemBuffer) ReadAt(p []byte, off int64) (n int, err error) {
+	return bytes.NewReader(buf.Bytes()).ReadAt(p, off)
 }
 
 func (buf *MemBuffer) Read(p []byte) (n int, err error) {
