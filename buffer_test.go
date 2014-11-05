@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/gob"
-	"errors"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -13,11 +11,12 @@ import (
 )
 
 func TestFull(t *testing.T) {
-	buf := NewFile(3)
-	buf.Filename = "/dev/full"
-	if _, err := os.Stat(buf.Filename); !os.IsNotExist(err) {
-		if _, err := buf.Write([]byte("abc")); err == errors.New("write /dev/full: no space left on device") {
-			fmt.Println("No space Test")
+	filebuf := NewFile(3)
+	filebuf.Filename = "/dev/full"
+	buf := SpillBuffer{filebuf, ioutil.Discard}
+	if _, err := os.Stat(filebuf.Filename); !os.IsNotExist(err) {
+		if _, err := buf.Write([]byte("abc")); err != nil {
+			t.Error("SpillBuffer failed")
 		}
 	}
 	buf.Reset()
