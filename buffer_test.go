@@ -9,6 +9,16 @@ import (
 	"testing"
 )
 
+func TestSpill(t *testing.T) {
+	buf := NewMulti(New(5), NewDiscard())
+	buf.Write([]byte("Hello World"))
+	data := make([]byte, 12)
+	n, _ := buf.Read(data)
+	if !bytes.Equal(data[:n], []byte("Hello")) {
+		t.Error("ReadAt Failed. " + string(data[:n]))
+	}
+}
+
 func TestReadAt(t *testing.T) {
 	buf := NewMulti(NewFile(2), NewFile(2), NewFile(2), NewFile(2), NewFile(2), NewFile(2))
 	buf.Write([]byte("Hello World"))
