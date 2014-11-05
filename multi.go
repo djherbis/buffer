@@ -83,7 +83,7 @@ func (buf *LinkBuffer) Read(p []byte) (n int, err error) {
 }
 
 func (buf *LinkBuffer) Write(p []byte) (n int, err error) {
-	if n, err = buf.buffer.Write(p); err == bytes.ErrTooLarge {
+	if n, err = buf.buffer.Write(p); err == bytes.ErrTooLarge && buf.hasNext {
 		err = nil
 	}
 	p = p[n:]
