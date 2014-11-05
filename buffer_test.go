@@ -4,18 +4,20 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/gob"
+	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"testing"
 )
 
-func FullTest(t *testing.T) {
+func TestFull(t *testing.T) {
 	buf := NewFile(3)
 	buf.Filename = "/dev/full"
 	if _, err := os.Stat(buf.Filename); !os.IsNotExist(err) {
-		if _, err := buf.Write([]byte("abc")); err != nil {
-			t.Error(err.Error())
+		if _, err := buf.Write([]byte("abc")); err == errors.New("write /dev/full: no space left on device") {
+			fmt.Println("No space Test")
 		}
 	}
 	buf.Reset()
