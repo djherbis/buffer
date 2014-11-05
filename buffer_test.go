@@ -10,7 +10,7 @@ import (
 )
 
 func TestReadAt(t *testing.T) {
-	buf := NewPartition(func() Buffer { return NewFile(2) })
+	buf := NewMulti(NewFile(2), NewFile(2), NewFile(2), NewFile(2), NewFile(2), NewFile(2))
 	buf.Write([]byte("Hello World"))
 	data := make([]byte, 10)
 	n, _ := buf.ReadAt(data, 6)

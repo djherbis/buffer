@@ -59,7 +59,23 @@ func (buf *LinkBuffer) Len() (n int64) {
 }
 
 func (buf *LinkBuffer) ReadAt(p []byte, off int64) (n int, err error) {
-	return 0, io.EOF
+	n, err = buf.buffer.ReadAt(p, off)
+	p = p[n:]
+
+	if len(p) > 0 && buf.hasNext && (err == nil || err == io.EOF) {
+		if off > buf.buffer.Len() {
+			off -= buf.buffer.Len()
+		} else {
+			off = 0
+		}
+		m, err := buf.next.ReadAt(p, off)
+		n += m
+		if err != nil {
+			return n, err
+		}
+	}
+
+	return n, err
 }
 
 func (buf *LinkBuffer) Read(p []byte) (n int, err error) {

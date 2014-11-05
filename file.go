@@ -44,7 +44,7 @@ func (buf *FileBuffer) Cap() int64 {
 
 func (buf *FileBuffer) ReadAt(p []byte, off int64) (n int, err error) {
 	wrap := NewWrapReader(buf.file, off, buf.Cap())
-	r := io.NewSectionReader(wrap, 0, buf.Len())
+	r := io.NewSectionReader(wrap, 0, buf.Len()-off)
 	return r.ReadAt(p, 0)
 }
 
