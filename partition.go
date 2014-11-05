@@ -1,8 +1,6 @@
 package buffer
 
-import (
-	"io"
-)
+import "io"
 
 type Partition struct {
 	BufferList
@@ -19,6 +17,42 @@ func NewPartition(make func() Buffer, buffers ...Buffer) *Partition {
 
 func (buf *Partition) Cap() int64 {
 	return MaxCap()
+}
+
+func (buf *Partition) ReadAt(p []byte, off int64) (n int, err error) {
+	index := 0
+	for off > 0 && index < len(buf.BufferList) {
+		buffer := buf.BufferList[index]
+		if off >= buffer.Len() {
+			off -= buffer.Len()
+			index++
+		} else {
+			break
+		}
+	}
+
+	for len(p) > 0 {
+
+		if index >= len(buf.BufferList) {
+			return n, io.EOF
+		}
+
+		buffer := buf.BufferList[index]
+
+		m, er := buffer.ReadAt(p, off)
+		n += m
+		p = p[m:]
+
+		if er == io.EOF {
+			index++
+			off = 0
+		} else if er != nil {
+			return n, er
+		}
+
+	}
+
+	return n, nil
 }
 
 func (buf *Partition) Read(p []byte) (n int, err error) {

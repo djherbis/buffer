@@ -34,6 +34,7 @@ type Buffer interface {
 	Caper
 	Resetter
 	io.Reader
+	io.ReaderAt
 	io.Writer
 }
 

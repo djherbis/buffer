@@ -57,6 +57,10 @@ func (buf *LinkBuffer) Len() (n int64) {
 	return buf.buffer.Len()
 }
 
+func (buf *LinkBuffer) ReadAt(p []byte, off int64) (n int, err error) {
+	return 0, io.EOF
+}
+
 func (buf *LinkBuffer) Read(p []byte) (n int, err error) {
 	n, err = buf.buffer.Read(p)
 	p = p[n:]

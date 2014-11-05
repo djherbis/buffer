@@ -10,13 +10,14 @@ import (
 )
 
 func TestReadAt(t *testing.T) {
-	buf := NewFile(11)
+	buf := NewPartition(func() Buffer { return NewFile(2) })
 	buf.Write([]byte("Hello World"))
 	data := make([]byte, 10)
 	n, _ := buf.ReadAt(data, 6)
 	if !bytes.Equal(data[:n], []byte("World")) {
-		t.Error("ReadAt Failed.")
+		t.Error("ReadAt Failed. " + string(data[:n]))
 	}
+	buf.Reset()
 }
 
 func TestFF(t *testing.T) {

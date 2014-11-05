@@ -1,7 +1,6 @@
 package buffer
 
 import (
-	"bytes"
 	"io"
 	"io/ioutil"
 	"os"
@@ -44,23 +43,16 @@ func (buf *FileBuffer) Cap() int64 {
 }
 
 func (buf *FileBuffer) ReadAt(p []byte, off int64) (n int, err error) {
-	if Empty(buf) || buf.Len() < off {
-		return 0, io.EOF
-	}
-
-	if len64(p) > buf.Len()-off {
-		p = p[:buf.Len()-off]
-	}
-
-	return Wrap(buf.file.Seek, buf.file.Read, ShrinkToRead(buf, p), off, buf.Cap())
+	wrap := NewWrapReader(buf.file, off, buf.Cap())
+	r := io.NewSectionReader(wrap, 0, buf.Len())
+	return r.ReadAt(p, 0)
 }
 
 func (buf *FileBuffer) Read(p []byte) (n int, err error) {
-	if Empty(buf) {
-		return 0, io.EOF
-	}
+	wrap := NewWrapReader(buf.file, buf.readOffset, buf.Cap())
+	r := io.LimitReader(wrap, buf.Len())
 
-	n, err = Wrap(buf.file.Seek, buf.file.Read, ShrinkToRead(buf, p), buf.readOffset, buf.Cap())
+	n, err = r.Read(p)
 	buf.len -= int64(n)
 	buf.readOffset = (buf.readOffset + int64(n)) % buf.Cap()
 
@@ -73,15 +65,13 @@ func (buf *FileBuffer) Read(p []byte) (n int, err error) {
 
 // BUG(Dustin): Add short write
 func (buf *FileBuffer) Write(p []byte) (n int, err error) {
-	if Full(buf) {
-		return 0, bytes.ErrTooLarge
-	}
-
 	if err := buf.init(); err != nil {
 		return 0, err
 	}
 
-	n, err = Wrap(buf.file.Seek, buf.file.Write, ShrinkToFit(buf, p), buf.writeOffset, buf.Cap())
+	wrap := NewWrapWriter(buf.file, buf.writeOffset, buf.Cap())
+	w := LimitWriter(wrap, Gap(buf))
+	n, err = w.Write(p)
 	buf.len += int64(n)
 	buf.writeOffset = (buf.writeOffset + int64(n)) % buf.Cap()
 
@@ -103,6 +93,7 @@ func (buf *FileBuffer) FastForward(n int) int {
 		n = int(buf.Len())
 	}
 
+	buf.len -= int64(n)
 	buf.readOffset = (buf.readOffset + int64(n)) % buf.Cap()
 
 	return n
