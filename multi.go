@@ -2,6 +2,7 @@ package buffer
 
 import (
 	"bytes"
+	"encoding/gob"
 	"io"
 )
 
@@ -128,4 +129,36 @@ func (buf *LinkBuffer) Write(p []byte) (n int, err error) {
 		}
 	}
 	return n, err
+}
+
+func init() {
+	gob.Register(&LinkBuffer{})
+}
+
+func (buf *LinkBuffer) MarshalBinary() ([]byte, error) {
+	b := bytes.NewBuffer(nil)
+	enc := gob.NewEncoder(b)
+	enc.Encode(&buf.Buf)
+	enc.Encode(buf.HasNext)
+	if buf.HasNext {
+		enc.Encode(&buf.Next)
+	}
+	return b.Bytes(), nil
+}
+
+func (buf *LinkBuffer) UnmarshalBinary(data []byte) error {
+	b := bytes.NewBuffer(data)
+	dec := gob.NewDecoder(b)
+	if err := dec.Decode(&buf.Buf); err != nil {
+		return err
+	}
+	if err := dec.Decode(&buf.HasNext); err != nil {
+		return err
+	}
+	if buf.HasNext {
+		if err := dec.Decode(&buf.Next); err != nil {
+			return err
+		}
+	}
+	return nil
 }

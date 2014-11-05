@@ -1,6 +1,7 @@
 package buffer
 
 import (
+	"encoding/gob"
 	"io"
 	"io/ioutil"
 	"os"
@@ -53,12 +54,20 @@ func (buf *FileBuffer) Cap() int64 {
 }
 
 func (buf *FileBuffer) ReadAt(p []byte, off int64) (n int, err error) {
+	if err := buf.init(); err != nil {
+		return 0, err
+	}
+
 	wrap := NewWrapReader(buf.file, off, buf.Cap())
 	r := io.NewSectionReader(wrap, 0, buf.Len()-off)
 	return r.ReadAt(p, 0)
 }
 
 func (buf *FileBuffer) Read(p []byte) (n int, err error) {
+	if err := buf.init(); err != nil {
+		return 0, err
+	}
+
 	wrap := NewWrapReader(buf.file, buf.ROff, buf.Cap())
 	r := io.LimitReader(wrap, buf.Len())
 
@@ -107,4 +116,8 @@ func (buf *FileBuffer) FastForward(n int) int {
 	buf.ROff = (buf.ROff + int64(n)) % buf.Cap()
 
 	return n
+}
+
+func init() {
+	gob.Register(&FileBuffer{})
 }

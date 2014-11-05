@@ -1,16 +1,15 @@
 package buffer
 
 import (
+	"encoding/gob"
 	"io"
 	"io/ioutil"
 )
 
-type Discard struct {
-	io.Writer
-}
+type Discard struct{}
 
 func NewDiscard() *Discard {
-	return &Discard{Writer: ioutil.Discard}
+	return &Discard{}
 }
 
 func (buf *Discard) Len() int64 {
@@ -31,6 +30,14 @@ func (buf *Discard) ReadAt(p []byte, off int64) (n int, err error) {
 	return 0, io.EOF
 }
 
+func (buf *Discard) Write(p []byte) (int, error) {
+	return ioutil.Discard.Write(p)
+}
+
 func (buf *Discard) FastForward(n int) int {
 	return 0
+}
+
+func init() {
+	gob.Register(&Discard{})
 }

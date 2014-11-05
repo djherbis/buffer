@@ -2,6 +2,7 @@ package buffer
 
 import (
 	"bytes"
+	"encoding/gob"
 	"io"
 )
 
@@ -129,4 +130,8 @@ func (buf *Partition) Write(p []byte) (n int, err error) {
 
 	}
 	return n, nil
+}
+
+func init() {
+	gob.Register(&Partition{})
 }

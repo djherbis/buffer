@@ -2,6 +2,8 @@ package buffer
 
 import (
 	"bytes"
+	"encoding/gob"
+	"fmt"
 	"io"
 )
 
@@ -45,4 +47,22 @@ func (buf *MemBuffer) FastForward(n int) int {
 	b := bytes.NewBuffer(data[n:])
 	buf.Buffer = b
 	return n
+}
+
+func init() {
+	gob.Register(&MemBuffer{})
+}
+
+func (buf *MemBuffer) MarshalBinary() ([]byte, error) {
+	var b bytes.Buffer
+	fmt.Fprint(&b, buf.N)
+	b.Write(buf.Bytes())
+	return b.Bytes(), nil
+}
+
+func (buf *MemBuffer) UnmarshalBinary(data []byte) error {
+	b := bytes.NewBuffer(data)
+	_, err := fmt.Fscan(b, &buf.N)
+	buf.Buffer = b
+	return err
 }

@@ -3,11 +3,35 @@ package buffer
 import (
 	"bytes"
 	"crypto/rand"
+	"encoding/gob"
 	"io"
 	"io/ioutil"
 	"os"
 	"testing"
 )
+
+func TestGob(t *testing.T) {
+	str := "HelloWorld"
+	buf := NewMulti(New(2), NewPartition(func() Buffer { return NewFile(2) }))
+	buf.Write([]byte(str))
+	b := bytes.NewBuffer(nil)
+	var test Buffer = buf
+	if err := gob.NewEncoder(b).Encode(&test); err != nil {
+		t.Error(err.Error())
+		return
+	}
+	var buffer Buffer
+	if err := gob.NewDecoder(b).Decode(&buffer); err != nil {
+		t.Error(err.Error())
+		return
+	}
+	data := make([]byte, 10)
+	buffer.Read(data)
+	if !bytes.Equal(data, []byte(str)) {
+		t.Error("Gob Recover Failed... " + string(data))
+	}
+	buf.Reset()
+}
 
 func TestSpill(t *testing.T) {
 	buf := NewMulti(New(5), NewDiscard())
