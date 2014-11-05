@@ -30,3 +30,7 @@ func (buf *Discard) Read(p []byte) (n int, err error) {
 func (buf *Discard) ReadAt(p []byte, off int64) (n int, err error) {
 	return 0, io.EOF
 }
+
+func (buf *Discard) FastForward(n int) int {
+	return 0
+}

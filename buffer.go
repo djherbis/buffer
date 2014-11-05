@@ -36,6 +36,7 @@ type Buffer interface {
 	io.Reader
 	io.ReaderAt
 	io.Writer
+	FastForward(int) int
 }
 
 type buffer struct {

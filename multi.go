@@ -78,6 +78,23 @@ func (buf *LinkBuffer) ReadAt(p []byte, off int64) (n int, err error) {
 	return n, err
 }
 
+func (buf *LinkBuffer) FastForward(n int) int {
+	m := buf.buffer.FastForward(n)
+
+	if n > m && buf.hasNext {
+		m += buf.next.FastForward(n - m)
+	}
+
+	for !Full(buf.buffer) && buf.hasNext && !Empty(buf.next) {
+		r := io.LimitReader(buf.next, Gap(buf.buffer))
+		if _, err := io.Copy(buf.buffer, r); err != nil && err != io.EOF {
+			return m
+		}
+	}
+
+	return m
+}
+
 func (buf *LinkBuffer) Read(p []byte) (n int, err error) {
 	n, err = buf.buffer.Read(p)
 	p = p[n:]
