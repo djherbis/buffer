@@ -26,8 +26,7 @@ func (buf *MemBuffer) Len() int64 {
 }
 
 func (buf *MemBuffer) Write(p []byte) (n int, err error) {
-	n, err = buf.Buffer.Write(ShrinkToFit(buf, p))
-	return n, err
+	return LimitWriter(buf.Buffer, Gap(buf)).Write(p)
 }
 
 func (buf *MemBuffer) ReadAt(b []byte, off int64) (n int, err error) {
@@ -35,11 +34,7 @@ func (buf *MemBuffer) ReadAt(b []byte, off int64) (n int, err error) {
 }
 
 func (buf *MemBuffer) Read(p []byte) (n int, err error) {
-	n, err = buf.Buffer.Read(ShrinkToRead(buf, p))
-	if buf.Len() == 0 {
-		err = io.EOF
-	}
-	return n, err
+	return io.LimitReader(buf.Buffer, buf.Len()).Read(p)
 }
 
 func (buf *MemBuffer) FastForward(n int) int {

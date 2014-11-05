@@ -1,6 +1,9 @@
 package buffer
 
-import "io"
+import (
+	"bytes"
+	"io"
+)
 
 type Partition struct {
 	BufferList
@@ -99,7 +102,9 @@ func (buf *Partition) Write(p []byte) (n int, err error) {
 		n += m
 		p = p[m:]
 
-		if er != nil {
+		if er == bytes.ErrTooLarge {
+			er = nil
+		} else if er != nil {
 			return n, er
 		}
 

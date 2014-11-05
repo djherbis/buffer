@@ -99,7 +99,10 @@ func runPerfectSeries(t *testing.T, buf Buffer) {
 
 func simple(t *testing.T, buf Buffer) {
 	buf.Write([]byte("hello world"))
-	data, _ := ioutil.ReadAll(buf)
+	data, err := ioutil.ReadAll(buf)
+	if err != nil {
+		t.Error(err.Error())
+	}
 	if !bytes.Equal([]byte("hello world"), data) {
 		t.Error("Hello world failed.")
 	}
@@ -108,7 +111,10 @@ func simple(t *testing.T, buf Buffer) {
 	data = make([]byte, 3)
 	buf.Read(data)
 	buf.Write([]byte(" yolo"))
-	data, _ = ioutil.ReadAll(buf)
+	data, err = ioutil.ReadAll(buf)
+	if err != nil {
+		t.Error(err.Error())
+	}
 	if !bytes.Equal([]byte("lo world yolo"), data) {
 		t.Error("Buffer crossing error :(", string(data))
 	}

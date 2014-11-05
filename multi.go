@@ -1,6 +1,7 @@
 package buffer
 
 import (
+	"bytes"
 	"io"
 )
 
@@ -73,8 +74,7 @@ func (buf *LinkBuffer) Read(p []byte) (n int, err error) {
 	}
 
 	for !Full(buf.buffer) && buf.hasNext && !Empty(buf.next) {
-		gap := Gap(buf.buffer)
-		r := io.LimitReader(buf.next, gap)
+		r := io.LimitReader(buf.next, Gap(buf.buffer))
 		if _, err = io.Copy(buf.buffer, r); err != nil && err != io.EOF {
 			return n, err
 		}
@@ -83,7 +83,9 @@ func (buf *LinkBuffer) Read(p []byte) (n int, err error) {
 }
 
 func (buf *LinkBuffer) Write(p []byte) (n int, err error) {
-	n, err = buf.buffer.Write(p)
+	if n, err = buf.buffer.Write(p); err == bytes.ErrTooLarge {
+		err = nil
+	}
 	p = p[n:]
 	if len(p) > 0 && buf.hasNext && err == nil {
 		m, err := buf.next.Write(p)

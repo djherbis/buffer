@@ -1,6 +1,9 @@
 package buffer
 
-import "io"
+import (
+	"bytes"
+	"io"
+)
 
 type LimitedWriter struct {
 	W io.Writer
@@ -9,7 +12,7 @@ type LimitedWriter struct {
 
 func (l *LimitedWriter) Write(p []byte) (n int, err error) {
 	if l.N <= 0 {
-		return 0, io.ErrShortBuffer
+		return 0, bytes.ErrTooLarge
 	}
 	if len64(p) > l.N {
 		p = p[0:l.N]
