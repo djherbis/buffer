@@ -7,11 +7,12 @@ import (
 )
 
 type FileBuffer struct {
-	file *os.File
-	N    int64
-	L    int64
-	ROff int64
-	WOff int64
+	file     *os.File
+	Filename string
+	N        int64
+	L        int64
+	ROff     int64
+	WOff     int64
 }
 
 func NewFile(N int64) *FileBuffer {
@@ -21,16 +22,25 @@ func NewFile(N int64) *FileBuffer {
 	return buf
 }
 
-func (buf *FileBuffer) init() error {
+func (buf *FileBuffer) init() (err error) {
+	var file *os.File
+
 	if buf.file == nil {
-		if file, err := ioutil.TempFile("D:\\Downloads\\temp", "buffer"); err == nil {
-			buf.file = file
-			buf.ROff = 0
-			buf.WOff = 0
-		} else {
+
+		if buf.Filename != "" {
+			if file, err = os.OpenFile(buf.Filename, os.O_CREATE|os.O_RDWR, 0644); err != nil {
+				return err
+			}
+		} else if file, err = ioutil.TempFile("D:\\Downloads\\temp", "buffer"); err != nil {
 			return err
 		}
+
+		buf.file = file
+		buf.Filename = file.Name()
+		buf.ROff = 0
+		buf.WOff = 0
 	}
+
 	return nil
 }
 
@@ -63,7 +73,6 @@ func (buf *FileBuffer) Read(p []byte) (n int, err error) {
 	return n, err
 }
 
-// BUG(Dustin): Add short write
 func (buf *FileBuffer) Write(p []byte) (n int, err error) {
 	if err := buf.init(); err != nil {
 		return 0, err
@@ -83,6 +92,7 @@ func (buf *FileBuffer) Reset() {
 		buf.file.Close()
 		os.Remove(buf.file.Name())
 		buf.file = nil
+		buf.Filename = ""
 		buf.ROff = 0
 		buf.WOff = 0
 	}
