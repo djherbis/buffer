@@ -10,6 +10,17 @@ import (
 	"testing"
 )
 
+func FullTest(t *testing.T) {
+	buf := NewFile(3)
+	buf.Filename = "/dev/full"
+	if _, err := os.Stat(buf.Filename); !os.IsNotExist(err) {
+		if _, err := buf.Write([]byte("abc")); err != nil {
+			t.Error(err.Error())
+		}
+	}
+	buf.Reset()
+}
+
 func TestGob(t *testing.T) {
 	str := "HelloWorld"
 	buf := NewMulti(New(2), NewPartition(func() Buffer { return NewFile(2) }))
