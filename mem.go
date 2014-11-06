@@ -35,7 +35,7 @@ func (buf *MemBuffer) Write(p []byte) (n int, err error) {
 func (buf *MemBuffer) WriteAt(p []byte, off int64) (n int, err error) {
 	if off > buf.Len() {
 		return 0, bytes.ErrTooLarge
-	} else if len64(p)+off < buf.Len() {
+	} else if len64(p)+off <= buf.Len() {
 		d := buf.Bytes()[off:]
 		return copy(d, p), nil
 	} else {

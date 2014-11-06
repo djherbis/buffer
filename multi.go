@@ -131,6 +131,28 @@ func (buf *LinkBuffer) Write(p []byte) (n int, err error) {
 	return n, err
 }
 
+func (buf *LinkBuffer) WriteAt(p []byte, off int64) (n int, err error) {
+	n, err = buf.Buf.WriteAt(p, off)
+	p = p[n:]
+
+	if len(p) > 0 && buf.HasNext && (err == nil || err == bytes.ErrTooLarge) {
+		if off > buf.Buf.Len() {
+			off -= buf.Buf.Len()
+		} else {
+			off = 0
+		}
+
+		var m int
+		m, err = buf.Next.WriteAt(p, off)
+		n += m
+		if err != nil {
+			return n, err
+		}
+	}
+
+	return n, err
+}
+
 func init() {
 	gob.Register(&LinkBuffer{})
 }

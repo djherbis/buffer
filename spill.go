@@ -1,6 +1,9 @@
 package buffer
 
-import "io"
+import (
+	"encoding/gob"
+	"io"
+)
 
 type SpillBuffer struct {
 	Buffer
@@ -12,4 +15,15 @@ func (buf *SpillBuffer) Write(p []byte) (n int, err error) {
 		buf.Spiller.Write(p[:n])
 	}
 	return len(p), nil
+}
+
+func (buf *SpillBuffer) WriteAt(p []byte, off int64) (n int, err error) {
+	if n, err = buf.Buffer.WriteAt(p, off); err != nil {
+		buf.Spiller.Write(p[:n])
+	}
+	return len(p), nil
+}
+
+func init() {
+	gob.Register(&SpillBuffer{})
 }

@@ -132,6 +132,45 @@ func (buf *Partition) Write(p []byte) (n int, err error) {
 	return n, nil
 }
 
+func (buf *Partition) WriteAt(p []byte, off int64) (n int, err error) {
+	index := 0
+	for off > 0 && index < len(buf.BufferList) {
+		buffer := buf.BufferList[index]
+		if off >= buffer.Len() {
+			off -= buffer.Len()
+			index++
+		} else {
+			break
+		}
+	}
+
+	for len(p) > 0 {
+
+		if index >= len(buf.BufferList) {
+			if off > 0 {
+				return n, bytes.ErrTooLarge
+			}
+			buf.BufferList.Push(buf.make())
+		}
+
+		buffer := buf.BufferList[index]
+
+		m, er := buffer.WriteAt(p, off)
+		n += m
+		p = p[m:]
+
+		if er == bytes.ErrTooLarge {
+			index++
+			off = 0
+		} else if er != nil {
+			return n, er
+		}
+
+	}
+
+	return n, nil
+}
+
 func init() {
 	gob.Register(&Partition{})
 }

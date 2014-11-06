@@ -11,7 +11,7 @@ import (
 )
 
 func TestWriteAt(t *testing.T) {
-	buf := NewFile(6)
+	buf := NewUnboundedBuffer(3, 3)
 
 	if _, err := buf.Write([]byte("abc")); err != nil {
 		t.Error(err.Error())
@@ -24,7 +24,7 @@ func TestWriteAt(t *testing.T) {
 	if data, err := ioutil.ReadAll(buf); err != nil {
 		t.Error(err.Error())
 	} else if !bytes.Equal(data, []byte("abdef")) {
-		t.Error("Not adef: " + string(data))
+		t.Error("Not abdef: " + string(data))
 	}
 }
 
