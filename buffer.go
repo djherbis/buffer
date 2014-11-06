@@ -37,7 +37,7 @@ type Buffer interface {
 	io.ReaderAt
 	io.Writer
 	io.WriterAt
-	FFwd(int) int
+	FFwd(int64) int64
 }
 
 type buffer struct {

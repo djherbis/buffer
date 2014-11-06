@@ -59,7 +59,7 @@ func (buf *Partition) ReadAt(p []byte, off int64) (n int, err error) {
 	return n, nil
 }
 
-func (buf *Partition) FFwd(n int) (m int) {
+func (buf *Partition) FFwd(n int64) (m int64) {
 	for n > m {
 		if len(buf.BufferList) == 0 {
 			return m

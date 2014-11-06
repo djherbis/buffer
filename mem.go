@@ -54,10 +54,10 @@ func (buf *MemBuffer) Read(p []byte) (n int, err error) {
 	return io.LimitReader(buf.Buffer, buf.Len()).Read(p)
 }
 
-func (buf *MemBuffer) FFwd(n int) int {
+func (buf *MemBuffer) FFwd(n int64) int64 {
 	data := buf.Bytes()
-	if n > len(data) {
-		n = len(data)
+	if n > len64(data) {
+		n = len64(data)
 	}
 	b := bytes.NewBuffer(data[n:])
 	buf.Buffer = b

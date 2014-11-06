@@ -79,7 +79,7 @@ func (buf *LinkBuffer) ReadAt(p []byte, off int64) (n int, err error) {
 	return n, err
 }
 
-func (buf *LinkBuffer) FFwd(n int) int {
+func (buf *LinkBuffer) FFwd(n int64) int64 {
 	m := buf.Buf.FFwd(n)
 
 	if n > m && buf.HasNext {

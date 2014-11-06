@@ -121,9 +121,9 @@ func (buf *FileBuffer) Reset() {
 	}
 }
 
-func (buf *FileBuffer) FFwd(n int) int {
+func (buf *FileBuffer) FFwd(n int64) int64 {
 	if int64(n) > buf.Len() {
-		n = int(buf.Len())
+		n = buf.Len()
 	}
 
 	buf.L -= int64(n)

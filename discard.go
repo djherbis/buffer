@@ -38,7 +38,7 @@ func (buf *Discard) WriteAt(p []byte, off int64) (int, error) {
 	return ioutil.Discard.Write(p)
 }
 
-func (buf *Discard) FFwd(n int) int {
+func (buf *Discard) FFwd(n int64) int64 {
 	return 0
 }
 
