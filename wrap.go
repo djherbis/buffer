@@ -13,6 +13,23 @@ type wrapper struct {
 	doat   DoAtFunc
 }
 
+func (w *wrapper) Offset() int64 {
+	return w.off
+}
+
+func (w *wrapper) Seek(offset int64, whence int) (int64, error) {
+	switch whence {
+	case 0:
+		w.off = offset
+	case 1:
+		w.off += offset
+	case 2:
+		w.off = (w.wrapAt + offset)
+	}
+	w.off %= w.wrapAt
+	return w.off, nil
+}
+
 func (w *wrapper) DoAt(p []byte, off int64) (n int, err error) {
 	return w.doat(p, off)
 }
@@ -82,12 +99,9 @@ func Wrap(w DoerAt, p []byte, off int64, wrapAt int64) (n int, err error) {
 		}
 
 		n += m
-		off += int64(m)
 		p = p[m:]
-
-		if off == wrapAt {
-			off = 0
-		}
+		off += int64(m)
+		off %= wrapAt
 	}
 
 	return n, err

@@ -10,6 +10,24 @@ import (
 	"testing"
 )
 
+func TestRing(t *testing.T) {
+	b := New(5)
+	buf := NewRing(b)
+	buf.Write([]byte("abcdef"))
+	data := make([]byte, 2)
+	if _, err := buf.ReadAt(data, 3); err != nil {
+		t.Error(err.Error())
+	}
+	if !bytes.Equal(data, []byte("ef")) {
+		t.Error("ReadAt Failed " + string(data))
+	}
+	data, _ = ioutil.ReadAll(buf)
+	if !bytes.Equal(data, []byte("bcdef")) {
+		t.Error("Write or Read Failed " + string(data))
+	}
+	b.Reset()
+}
+
 func TestWriteAt(t *testing.T) {
 	buf := NewUnboundedBuffer(3, 3)
 
