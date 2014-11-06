@@ -10,8 +10,39 @@ import (
 	"testing"
 )
 
+func TestWriteAt2(t *testing.T) {
+
+	b := NewFile(5)
+
+	b.WriteAt([]byte("abc"), 0)
+	Compare(t, b, "abc")
+
+	b.WriteAt([]byte("abc"), 1)
+	Compare(t, b, "aabc")
+
+	b.WriteAt([]byte("abc"), 2)
+	Compare(t, b, "aaabc")
+
+	b.WriteAt([]byte("abc"), 3)
+	Compare(t, b, "aaaab")
+
+	b.Read(make([]byte, 2))
+
+	Compare(t, b, "aab")
+
+	b.Reset()
+}
+
+func Compare(t *testing.T, b Buffer, s string) {
+	data := make([]byte, b.Len())
+	n, _ := b.ReadAt(data, 0)
+	if string(data[:n]) != s {
+		t.Error("Mismatch:", string(data[:n]), s)
+	}
+}
+
 func TestRing(t *testing.T) {
-	b := New(5)
+	b := NewMulti(NewFile(3), NewFile(2))
 	buf := NewRing(b)
 	buf.Write([]byte("abcdef"))
 	data := make([]byte, 2)
@@ -91,7 +122,7 @@ func TestSpill(t *testing.T) {
 }
 
 func TestReadAt(t *testing.T) {
-	buf := NewMulti(NewFile(2), NewFile(2), NewFile(2), NewFile(2), NewFile(2), NewFile(2))
+	buf := NewUnboundedBuffer(1, 1)
 	buf.Write([]byte("Hello World"))
 	data := make([]byte, 10)
 	n, _ := buf.ReadAt(data, 6)

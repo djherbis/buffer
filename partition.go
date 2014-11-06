@@ -47,7 +47,7 @@ func (buf *Partition) ReadAt(p []byte, off int64) (n int, err error) {
 		n += m
 		p = p[m:]
 
-		if er == io.EOF {
+		if er == io.EOF || int64(m)+off == buffer.Len() {
 			index++
 			off = 0
 		} else if er != nil {
@@ -159,7 +159,7 @@ func (buf *Partition) WriteAt(p []byte, off int64) (n int, err error) {
 		n += m
 		p = p[m:]
 
-		if er == bytes.ErrTooLarge {
+		if er == bytes.ErrTooLarge || int64(m)+off == buffer.Cap() {
 			index++
 			off = 0
 		} else if er != nil {

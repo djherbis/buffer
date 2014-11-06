@@ -34,10 +34,7 @@ func (buf *Ring) ReadAt(p []byte, off int64) (n int, err error) {
 	if Full(buf) {
 		buf.WrapReader.Seek(buf.WrapWriter.Offset(), 0)
 	}
-	rOff := buf.WrapReader.Offset() + off
-	rOff %= buf.Cap()
-	r := io.NewSectionReader(buf.WrapReader, rOff, buf.Len()-off)
-	return r.ReadAt(p, 0)
+	return buf.WrapReader.ReadAt(p, buf.WrapReader.Offset()+off)
 }
 
 func (buf *Ring) Write(p []byte) (n int, err error) {
