@@ -31,6 +31,10 @@ func (buf *Memory) Write(p []byte) (n int, err error) {
 	return LimitWriter(buf.Buffer, Gap(buf)).Write(p)
 }
 
+func (buf *Memory) WriteTo(w io.Writer) (n int64, err error) {
+	return buf.Buffer.WriteTo(w)
+}
+
 // Must Add io.ErrShortWrite
 func (buf *Memory) WriteAt(p []byte, off int64) (n int, err error) {
 	if off > buf.Len() {
