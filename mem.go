@@ -54,6 +54,10 @@ func (buf *Memory) Read(p []byte) (n int, err error) {
 	return io.LimitReader(buf.Buffer, buf.Len()).Read(p)
 }
 
+func (buf *Memory) ReadFrom(r io.Reader) (n int64, err error) {
+	return buf.Buffer.ReadFrom(io.LimitReader(r, Gap(buf)))
+}
+
 func (buf *Memory) FFwd(n int64) int64 {
 	data := buf.Bytes()
 	if n > len64(data) {
