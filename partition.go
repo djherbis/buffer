@@ -133,6 +133,10 @@ func (buf *Partition) Write(p []byte) (n int, err error) {
 }
 
 func (buf *Partition) WriteAt(p []byte, off int64) (n int, err error) {
+	if off > buf.Len() {
+		return 0, bytes.ErrTooLarge
+	}
+
 	index := 0
 	for off > 0 && index < len(buf.BufferList) {
 		buffer := buf.BufferList[index]
