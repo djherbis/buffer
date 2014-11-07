@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-type FileBuffer struct {
+type File struct {
 	file     *os.File
 	Filename string
 	N        int64
@@ -16,14 +16,14 @@ type FileBuffer struct {
 	WOff     int64
 }
 
-func NewFile(N int64) *FileBuffer {
-	buf := &FileBuffer{
+func NewFile(N int64) *File {
+	buf := &File{
 		N: N,
 	}
 	return buf
 }
 
-func (buf *FileBuffer) init() (err error) {
+func (buf *File) init() (err error) {
 	var file *os.File
 
 	if buf.file == nil {
@@ -45,15 +45,15 @@ func (buf *FileBuffer) init() (err error) {
 	return nil
 }
 
-func (buf *FileBuffer) Len() int64 {
+func (buf *File) Len() int64 {
 	return buf.L
 }
 
-func (buf *FileBuffer) Cap() int64 {
+func (buf *File) Cap() int64 {
 	return buf.N
 }
 
-func (buf *FileBuffer) ReadAt(p []byte, off int64) (n int, err error) {
+func (buf *File) ReadAt(p []byte, off int64) (n int, err error) {
 	if err := buf.init(); err != nil {
 		return 0, err
 	}
@@ -63,7 +63,7 @@ func (buf *FileBuffer) ReadAt(p []byte, off int64) (n int, err error) {
 	return r.Read(p)
 }
 
-func (buf *FileBuffer) Read(p []byte) (n int, err error) {
+func (buf *File) Read(p []byte) (n int, err error) {
 	if err := buf.init(); err != nil {
 		return 0, err
 	}
@@ -82,7 +82,7 @@ func (buf *FileBuffer) Read(p []byte) (n int, err error) {
 	return n, err
 }
 
-func (buf *FileBuffer) Write(p []byte) (n int, err error) {
+func (buf *File) Write(p []byte) (n int, err error) {
 	if err := buf.init(); err != nil {
 		return 0, err
 	}
@@ -96,7 +96,7 @@ func (buf *FileBuffer) Write(p []byte) (n int, err error) {
 	return n, err
 }
 
-func (buf *FileBuffer) WriteAt(p []byte, off int64) (n int, err error) {
+func (buf *File) WriteAt(p []byte, off int64) (n int, err error) {
 	if err := buf.init(); err != nil {
 		return 0, err
 	}
@@ -110,7 +110,7 @@ func (buf *FileBuffer) WriteAt(p []byte, off int64) (n int, err error) {
 	return n, err
 }
 
-func (buf *FileBuffer) Reset() {
+func (buf *File) Reset() {
 	if buf.file != nil {
 		buf.file.Close()
 		os.Remove(buf.file.Name())
@@ -121,7 +121,7 @@ func (buf *FileBuffer) Reset() {
 	}
 }
 
-func (buf *FileBuffer) FFwd(n int64) int64 {
+func (buf *File) FFwd(n int64) int64 {
 	if int64(n) > buf.Len() {
 		n = buf.Len()
 	}
@@ -133,5 +133,5 @@ func (buf *FileBuffer) FFwd(n int64) int64 {
 }
 
 func init() {
-	gob.Register(&FileBuffer{})
+	gob.Register(&File{})
 }

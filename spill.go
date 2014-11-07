@@ -5,19 +5,19 @@ import (
 	"io"
 )
 
-type SpillBuffer struct {
+type Spill struct {
 	Buffer
 	Spiller io.Writer
 }
 
-func (buf *SpillBuffer) Write(p []byte) (n int, err error) {
+func (buf *Spill) Write(p []byte) (n int, err error) {
 	if n, err = buf.Buffer.Write(p); err != nil {
 		buf.Spiller.Write(p[:n])
 	}
 	return len(p), nil
 }
 
-func (buf *SpillBuffer) WriteAt(p []byte, off int64) (n int, err error) {
+func (buf *Spill) WriteAt(p []byte, off int64) (n int, err error) {
 	if n, err = buf.Buffer.WriteAt(p, off); err != nil {
 		buf.Spiller.Write(p[:n])
 	}
@@ -25,5 +25,5 @@ func (buf *SpillBuffer) WriteAt(p []byte, off int64) (n int, err error) {
 }
 
 func init() {
-	gob.Register(&SpillBuffer{})
+	gob.Register(&Spill{})
 }

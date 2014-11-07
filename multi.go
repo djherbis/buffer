@@ -6,18 +6,18 @@ import (
 	"io"
 )
 
-type LinkBuffer struct {
+type Chain struct {
 	Buf     Buffer
 	Next    Buffer
 	HasNext bool
 }
 
-func NewMulti(buffers ...Buffer) *LinkBuffer {
+func NewMulti(buffers ...Buffer) *Chain {
 	if len(buffers) == 0 {
 		return nil
 	}
 
-	buf := &LinkBuffer{
+	buf := &Chain{
 		Buf:     buffers[0],
 		Next:    NewMulti(buffers[1:]...),
 		HasNext: len(buffers[1:]) != 0,
@@ -26,14 +26,14 @@ func NewMulti(buffers ...Buffer) *LinkBuffer {
 	return buf
 }
 
-func (buf *LinkBuffer) Reset() {
+func (buf *Chain) Reset() {
 	if buf.HasNext {
 		buf.Next.Reset()
 	}
 	buf.Buf.Reset()
 }
 
-func (buf *LinkBuffer) Cap() (n int64) {
+func (buf *Chain) Cap() (n int64) {
 	if buf.HasNext {
 		Next := buf.Next.Cap()
 		if buf.Buf.Cap() > MAXINT64-Next {
@@ -46,7 +46,7 @@ func (buf *LinkBuffer) Cap() (n int64) {
 	return buf.Buf.Cap()
 }
 
-func (buf *LinkBuffer) Len() (n int64) {
+func (buf *Chain) Len() (n int64) {
 	if buf.HasNext {
 		Next := buf.Next.Len()
 		if buf.Buf.Len() > MAXINT64-Next {
@@ -59,7 +59,7 @@ func (buf *LinkBuffer) Len() (n int64) {
 	return buf.Buf.Len()
 }
 
-func (buf *LinkBuffer) ReadAt(p []byte, off int64) (n int, err error) {
+func (buf *Chain) ReadAt(p []byte, off int64) (n int, err error) {
 	n, err = buf.Buf.ReadAt(p, off)
 	p = p[n:]
 
@@ -79,7 +79,7 @@ func (buf *LinkBuffer) ReadAt(p []byte, off int64) (n int, err error) {
 	return n, err
 }
 
-func (buf *LinkBuffer) FFwd(n int64) int64 {
+func (buf *Chain) FFwd(n int64) int64 {
 	m := buf.Buf.FFwd(n)
 
 	if n > m && buf.HasNext {
@@ -96,7 +96,7 @@ func (buf *LinkBuffer) FFwd(n int64) int64 {
 	return m
 }
 
-func (buf *LinkBuffer) Read(p []byte) (n int, err error) {
+func (buf *Chain) Read(p []byte) (n int, err error) {
 	n, err = buf.Buf.Read(p)
 	p = p[n:]
 	if len(p) > 0 && buf.HasNext && (err == nil || err == io.EOF) {
@@ -116,7 +116,7 @@ func (buf *LinkBuffer) Read(p []byte) (n int, err error) {
 	return n, err
 }
 
-func (buf *LinkBuffer) Write(p []byte) (n int, err error) {
+func (buf *Chain) Write(p []byte) (n int, err error) {
 	if n, err = buf.Buf.Write(p); err == bytes.ErrTooLarge && buf.HasNext {
 		err = nil
 	}
@@ -131,7 +131,7 @@ func (buf *LinkBuffer) Write(p []byte) (n int, err error) {
 	return n, err
 }
 
-func (buf *LinkBuffer) WriteAt(p []byte, off int64) (n int, err error) {
+func (buf *Chain) WriteAt(p []byte, off int64) (n int, err error) {
 	n, err = buf.Buf.WriteAt(p, off)
 	p = p[n:]
 
@@ -154,10 +154,10 @@ func (buf *LinkBuffer) WriteAt(p []byte, off int64) (n int, err error) {
 }
 
 func init() {
-	gob.Register(&LinkBuffer{})
+	gob.Register(&Chain{})
 }
 
-func (buf *LinkBuffer) MarshalBinary() ([]byte, error) {
+func (buf *Chain) MarshalBinary() ([]byte, error) {
 	b := bytes.NewBuffer(nil)
 	enc := gob.NewEncoder(b)
 	enc.Encode(&buf.Buf)
@@ -168,7 +168,7 @@ func (buf *LinkBuffer) MarshalBinary() ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-func (buf *LinkBuffer) UnmarshalBinary(data []byte) error {
+func (buf *Chain) UnmarshalBinary(data []byte) error {
 	b := bytes.NewBuffer(data)
 	dec := gob.NewDecoder(b)
 	if err := dec.Decode(&buf.Buf); err != nil {

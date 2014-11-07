@@ -80,7 +80,7 @@ func TestWriteAt(t *testing.T) {
 func TestFull(t *testing.T) {
 	filebuf := NewFile(3)
 	filebuf.Filename = "/dev/full"
-	buf := SpillBuffer{filebuf, ioutil.Discard}
+	buf := Spill{filebuf, ioutil.Discard}
 	if _, err := os.Stat(filebuf.Filename); !os.IsNotExist(err) {
 		if _, err := buf.Write([]byte("abc")); err != nil {
 			t.Error("SpillBuffer failed")
