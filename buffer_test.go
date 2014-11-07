@@ -184,14 +184,14 @@ func TestMem(t *testing.T) {
 
 func TestFilePartition(t *testing.T) {
 	buf := NewPartition(func() Buffer { return NewFile(1024) })
-	checkCap(t, buf, MaxCap())
+	checkCap(t, buf, MAXINT64)
 	runPerfectSeries(t, buf)
 	buf.Reset()
 }
 
 func TestMulti(t *testing.T) {
 	buf := NewMulti(New(5), New(5), NewFile(500), NewPartition(func() Buffer { return New(1024) }))
-	checkCap(t, buf, MaxCap())
+	checkCap(t, buf, MAXINT64)
 	runPerfectSeries(t, buf)
 	isPerfectMatch(t, buf, 1024*1024)
 	buf.Reset()
@@ -201,7 +201,7 @@ func runPerfectSeries(t *testing.T, buf Buffer) {
 	checkEmpty(t, buf)
 	simple(t, buf)
 
-	max := LimitAlloc(buf.Cap())
+	max := int64(1024)
 	isPerfectMatch(t, buf, 0)
 	for i := int64(1); i < max; i *= 2 {
 		isPerfectMatch(t, buf, i)

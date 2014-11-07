@@ -36,8 +36,8 @@ func (buf *LinkBuffer) Reset() {
 func (buf *LinkBuffer) Cap() (n int64) {
 	if buf.HasNext {
 		Next := buf.Next.Cap()
-		if buf.Buf.Cap() > MaxCap()-Next {
-			return MaxCap()
+		if buf.Buf.Cap() > MAXINT64-Next {
+			return MAXINT64
 		} else {
 			return buf.Buf.Cap() + Next
 		}
@@ -49,8 +49,8 @@ func (buf *LinkBuffer) Cap() (n int64) {
 func (buf *LinkBuffer) Len() (n int64) {
 	if buf.HasNext {
 		Next := buf.Next.Len()
-		if buf.Buf.Len() > MaxCap()-Next {
-			return MaxCap()
+		if buf.Buf.Len() > MAXINT64-Next {
+			return MAXINT64
 		} else {
 			return buf.Buf.Len() + Next
 		}

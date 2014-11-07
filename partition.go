@@ -20,7 +20,7 @@ func NewPartition(make func() Buffer, buffers ...Buffer) *Partition {
 }
 
 func (buf *Partition) Cap() int64 {
-	return MaxCap()
+	return MAXINT64
 }
 
 func (buf *Partition) ReadAt(p []byte, off int64) (n int, err error) {

@@ -2,16 +2,32 @@ package buffer
 
 type BufferList []Buffer
 
-func (l *BufferList) Len() int64 {
-	return TotalLen(*l)
+func (l *BufferList) Len() (n int64) {
+	for _, buffer := range *l {
+		if n > MAXINT64-buffer.Len() {
+			return MAXINT64
+		} else {
+			n += buffer.Len()
+		}
+	}
+	return n
 }
 
-func (l *BufferList) Cap() int64 {
-	return TotalCap(*l)
+func (l *BufferList) Cap() (n int64) {
+	for _, buffer := range *l {
+		if n > MAXINT64-buffer.Cap() {
+			return MAXINT64
+		} else {
+			n += buffer.Cap()
+		}
+	}
+	return n
 }
 
 func (l *BufferList) Reset() {
-	ResetAll(*l)
+	for _, buffer := range *l {
+		buffer.Reset()
+	}
 }
 
 func (l *BufferList) Push(b Buffer) {
