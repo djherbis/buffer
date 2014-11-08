@@ -12,9 +12,11 @@ type Chain struct {
 	HasNext bool
 }
 
-func NewMulti(buffers ...Buffer) *Chain {
+func NewMulti(buffers ...Buffer) Buffer {
 	if len(buffers) == 0 {
 		return nil
+	} else if len(buffers) == 1 {
+		return buffers[0]
 	}
 
 	buf := &Chain{
@@ -22,6 +24,8 @@ func NewMulti(buffers ...Buffer) *Chain {
 		Next:    NewMulti(buffers[1:]...),
 		HasNext: len(buffers[1:]) != 0,
 	}
+
+	buf.Defrag()
 
 	return buf
 }
@@ -86,14 +90,18 @@ func (buf *Chain) FFwd(n int64) int64 {
 		m += buf.Next.FFwd(n - m)
 	}
 
+	buf.Defrag()
+
+	return m
+}
+
+func (buf *Chain) Defrag() {
 	for !Full(buf.Buf) && buf.HasNext && !Empty(buf.Next) {
 		r := io.LimitReader(buf.Next, Gap(buf.Buf))
 		if _, err := io.Copy(buf.Buf, r); err != nil && err != io.EOF {
-			return m
+			return
 		}
 	}
-
-	return m
 }
 
 func (buf *Chain) Read(p []byte) (n int, err error) {
@@ -107,12 +115,8 @@ func (buf *Chain) Read(p []byte) (n int, err error) {
 		}
 	}
 
-	for !Full(buf.Buf) && buf.HasNext && !Empty(buf.Next) {
-		r := io.LimitReader(buf.Next, Gap(buf.Buf))
-		if _, err = io.Copy(buf.Buf, r); err != nil && err != io.EOF {
-			return n, err
-		}
-	}
+	buf.Defrag()
+
 	return n, err
 }
 
