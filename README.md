@@ -7,4 +7,4 @@
 
 ### How do I get set up? ###
 
-* Just include the buffer package, and start using Buffers!
+go get https://github.com/djherbis/buffer
