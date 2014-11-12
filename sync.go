@@ -6,7 +6,7 @@ import (
 )
 
 type Sync struct {
-	done bool
+	done chan struct{}
 	l    sync.Mutex
 	c    *sync.Cond
 	b    Buffer
@@ -15,16 +15,16 @@ type Sync struct {
 
 func NewSync(buf Buffer) *Sync {
 	s := &Sync{
-		b: buf,
+		b:    buf,
+		done: make(chan struct{}),
 	}
 	s.c = sync.NewCond(&s.l)
 	return s
 }
 
 func (r *Sync) Done() {
-	r.l.Lock()
-	defer r.l.Unlock()
-	r.done = true
+	close(r.done)
+	r.c.Signal()
 }
 
 func (r *Sync) Read(p []byte) (n int, err error) {
@@ -34,13 +34,15 @@ func (r *Sync) Read(p []byte) (n int, err error) {
 
 	r.b.FFwd(int64(r.lr))
 
-	for Empty(r.b) && !r.done {
+	for Empty(r.b) {
+		select {
+		case <-r.done:
+			return 0, io.EOF
+		default:
+		}
+
 		r.c.Signal()
 		r.c.Wait()
-	}
-
-	if Empty(r.b) && r.done {
-		return 0, io.EOF
 	}
 
 	n, _ = r.b.ReadAt(p, 0)
