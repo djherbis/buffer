@@ -2,10 +2,27 @@ package buffer
 
 import (
 	"encoding/gob"
+	"errors"
 	"io"
 	"io/ioutil"
 	"os"
+	"sync"
 )
+
+var dataDir string
+var setDataDir sync.Once
+
+// BUG(Dustin): Path is created even if its not used.
+func SetDataDir(path string, perm os.FileMode) (err error) {
+	if err = os.MkdirAll(path, perm); err == nil {
+		err = errors.New("already set")
+		setDataDir.Do(func() {
+			dataDir = path
+			err = nil
+		})
+	}
+	return err
+}
 
 type File struct {
 	file     *os.File
@@ -28,11 +45,15 @@ func (buf *File) init() (err error) {
 
 	if buf.file == nil {
 
+		setDataDir.Do(func() {
+			dataDir = ""
+		})
+
 		if buf.Filename != "" {
 			if file, err = os.OpenFile(buf.Filename, os.O_CREATE|os.O_RDWR, 0644); err != nil {
 				return err
 			}
-		} else if file, err = ioutil.TempFile("", "buffer"); err != nil {
+		} else if file, err = ioutil.TempFile(dataDir, "buffer"); err != nil {
 			return err
 		}
 
