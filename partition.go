@@ -1,7 +1,6 @@
 package buffer
 
 import (
-	"bytes"
 	"encoding/gob"
 	"io"
 )
@@ -122,7 +121,7 @@ func (buf *Partition) Write(p []byte) (n int, err error) {
 		n += m
 		p = p[m:]
 
-		if er == bytes.ErrTooLarge {
+		if er == io.ErrShortBuffer {
 			er = nil
 		} else if er != nil {
 			return n, er
@@ -134,7 +133,7 @@ func (buf *Partition) Write(p []byte) (n int, err error) {
 
 func (buf *Partition) WriteAt(p []byte, off int64) (n int, err error) {
 	if off > buf.Len() {
-		return 0, bytes.ErrTooLarge
+		return 0, io.ErrShortBuffer
 	}
 
 	index := 0
@@ -152,7 +151,7 @@ func (buf *Partition) WriteAt(p []byte, off int64) (n int, err error) {
 
 		if index >= len(buf.BufferList) {
 			if off > 0 {
-				return n, bytes.ErrTooLarge
+				return n, io.ErrShortBuffer
 			}
 			buf.BufferList.Push(buf.make())
 		}
@@ -163,7 +162,7 @@ func (buf *Partition) WriteAt(p []byte, off int64) (n int, err error) {
 		n += m
 		p = p[m:]
 
-		if er == bytes.ErrTooLarge || int64(m)+off == buffer.Cap() {
+		if er == io.ErrShortBuffer || int64(m)+off == buffer.Cap() {
 			index++
 			off = 0
 		} else if er != nil {

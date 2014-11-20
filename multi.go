@@ -121,7 +121,7 @@ func (buf *Chain) Read(p []byte) (n int, err error) {
 }
 
 func (buf *Chain) Write(p []byte) (n int, err error) {
-	if n, err = buf.Buf.Write(p); err == bytes.ErrTooLarge && buf.HasNext {
+	if n, err = buf.Buf.Write(p); err == io.ErrShortBuffer && buf.HasNext {
 		err = nil
 	}
 	p = p[n:]
@@ -139,7 +139,7 @@ func (buf *Chain) WriteAt(p []byte, off int64) (n int, err error) {
 	n, err = buf.Buf.WriteAt(p, off)
 	p = p[n:]
 
-	if len(p) > 0 && buf.HasNext && (err == nil || err == bytes.ErrTooLarge) {
+	if len(p) > 0 && buf.HasNext && (err == nil || err == io.ErrShortBuffer) {
 		if off > buf.Buf.Len() {
 			off -= buf.Buf.Len()
 		} else {

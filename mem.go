@@ -34,7 +34,7 @@ func (buf *Memory) Write(p []byte) (n int, err error) {
 // Must Add io.ErrShortWrite
 func (buf *Memory) WriteAt(p []byte, off int64) (n int, err error) {
 	if off > buf.Len() {
-		return 0, bytes.ErrTooLarge
+		return 0, io.ErrShortBuffer
 	} else if len64(p)+off <= buf.Len() {
 		d := buf.Bytes()[off:]
 		return copy(d, p), nil
