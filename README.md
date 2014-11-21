@@ -14,10 +14,11 @@ go get github.com/djherbis/buffer
 The following buffers provide simple unique behviours which when composed can create complex buffering strategies. For use with github.com/djherbis/nio for Buffered io.Pipe and io.Copy implementations.
 
 For example: 
--> NewUnboundedBuffer(mem, chunk) = NewMulti(New(mem), NewPartition(func() Buffer { return NewFile(chunk) }))
+
+NewUnboundedBuffer(mem, chunk) = NewMulti(New(mem), NewPartition(func() Buffer { return NewFile(chunk) }))
 Buffers mem bytes to Memory, then creates Files with max-size chunk for overflow.
 
--> Spill(New(mem), ioutil.Discard), a leaky buffer. When its memory is full it discards the extra.
+Spill(New(mem), ioutil.Discard), a leaky buffer. When its memory is full it discards the extra.
 
 etc.
 
