@@ -21,6 +21,10 @@ func (buf *Ring) Len() int64 {
 	return buf.L
 }
 
+func (buf *Ring) Cap() int64 {
+	return MAXINT64
+}
+
 func (buf *Ring) Read(p []byte) (n int, err error) {
 	if Full(buf) {
 		buf.WrapReader.Seek(buf.WrapWriter.Offset(), 0)
