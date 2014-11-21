@@ -56,10 +56,45 @@ func (w *Sync) Write(p []byte) (n int, err error) {
 	defer w.c.Signal()
 	defer w.l.Unlock()
 
-	for Gap(w.b) < len64(p) {
-		w.c.Signal()
-		w.c.Wait()
+	var m int
+
+	// more data to write
+	for len(p[n:]) > 0 {
+
+		// writes too big
+		for Gap(w.b) < len64(p[n:]) {
+
+			// wait for space
+			for Gap(w.b) == 0 {
+				w.c.Signal()
+				w.c.Wait()
+			}
+
+			// chunk write to fill space
+			m, err = w.b.Write(p[n : int64(n)+Gap(w.b)])
+			n += m
+			if err != nil {
+				return n, err
+			}
+
+			// wait for more space
+			w.c.Signal()
+			w.c.Wait()
+
+		}
+
+		// check if done
+		if len(p[n:]) == 0 {
+			return n, nil
+		}
+
+		// write
+		m, err = w.b.Write(p[n:])
+		n += m
+		if err != nil {
+			return n, err
+		}
 	}
 
-	return w.b.Write(p)
+	return n, err
 }
