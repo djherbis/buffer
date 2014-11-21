@@ -17,7 +17,7 @@ func (buf *Discard) Len() int64 {
 }
 
 func (buf *Discard) Cap() int64 {
-	return 0
+	return MAXINT64
 }
 
 func (buf *Discard) Reset() {}

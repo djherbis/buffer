@@ -10,6 +10,10 @@ type Spill struct {
 	Spiller io.Writer
 }
 
+func (buf *Spill) Cap() int64 {
+	return MAXINT64
+}
+
 func (buf *Spill) Write(p []byte) (n int, err error) {
 	if n, err = buf.Buffer.Write(p); err != nil {
 		buf.Spiller.Write(p[:n])
