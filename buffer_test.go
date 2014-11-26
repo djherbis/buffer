@@ -10,6 +10,22 @@ import (
 	"testing"
 )
 
+func BenchmarkSlice(b *testing.B) {
+	buf := NewBytes(32 * 1024)
+	for i := 0; i < b.N; i++ {
+		io.Copy(buf, io.LimitReader(rand.Reader, 32*1024))
+		io.Copy(ioutil.Discard, buf)
+	}
+}
+
+func BenchmarkMemory(b *testing.B) {
+	buf := New(32 * 1024)
+	for i := 0; i < b.N; i++ {
+		io.Copy(buf, io.LimitReader(rand.Reader, 32*1024))
+		io.Copy(ioutil.Discard, buf)
+	}
+}
+
 func TestWriteAt2(t *testing.T) {
 
 	b := NewFile(5)
@@ -88,6 +104,7 @@ func TestFull(t *testing.T) {
 	}
 }
 
+/**/
 func TestGob(t *testing.T) {
 	str := "HelloWorld"
 	buf := NewMulti(New(2), NewPartition(func() Buffer { return NewFile(2) }))
@@ -111,6 +128,8 @@ func TestGob(t *testing.T) {
 	buf.Reset()
 }
 
+/**/
+
 func TestSpill(t *testing.T) {
 	buf := NewMulti(New(5), NewDiscard())
 	buf.Write([]byte("Hello World"))
@@ -130,17 +149,6 @@ func TestReadAt(t *testing.T) {
 		t.Error("ReadAt Failed. " + string(data[:n]))
 	}
 	buf.Reset()
-}
-
-func TestFF(t *testing.T) {
-	buf := NewMulti(New(2), New(2), New(2), New(2), New(2), New(2), New(2))
-	buf.Write([]byte("Hello"))
-	buf.FFwd(3)
-	data := make([]byte, 4)
-	n, _ := buf.Read(data)
-	if !bytes.Equal(data[:n], []byte("lo")) {
-		t.Error("FFwd error! " + string(data))
-	}
 }
 
 func TestWrap(t *testing.T) {

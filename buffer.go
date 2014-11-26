@@ -26,7 +26,6 @@ type Buffer interface {
 	io.Writer
 	io.WriterAt
 	Reset()
-	FFwd(int64) int64
 }
 
 func len64(p []byte) int64 {

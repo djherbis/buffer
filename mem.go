@@ -58,16 +58,6 @@ func (buf *Memory) ReadFrom(r io.Reader) (n int64, err error) {
 	return buf.Buffer.ReadFrom(io.LimitReader(r, Gap(buf)))
 }
 
-func (buf *Memory) FFwd(n int64) int64 {
-	data := buf.Bytes()
-	if n > len64(data) {
-		n = len64(data)
-	}
-	b := bytes.NewBuffer(data[n:])
-	buf.Buffer = b
-	return n
-}
-
 func init() {
 	gob.Register(&Memory{})
 }

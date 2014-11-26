@@ -61,19 +61,6 @@ func (buf *Ring) WriteAt(p []byte, off int64) (n int, err error) {
 	return n, err
 }
 
-func (buf *Ring) FFwd(off int) int {
-	if buf.Len() == buf.Buffer.Cap() {
-		buf.WrapReader.Seek(buf.WrapWriter.Offset(), 0)
-	}
-	if int64(off) >= buf.Len() {
-		buf.Reset()
-		return int(buf.Len())
-	}
-	buf.WrapReader.Seek(int64(off), 1)
-	buf.L -= int64(off)
-	return off
-}
-
 func (buf *Ring) Reset() {
 	buf.Buffer.Reset()
 	buf.L = 0

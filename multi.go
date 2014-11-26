@@ -83,18 +83,6 @@ func (buf *Chain) ReadAt(p []byte, off int64) (n int, err error) {
 	return n, err
 }
 
-func (buf *Chain) FFwd(n int64) int64 {
-	m := buf.Buf.FFwd(n)
-
-	if n > m && buf.HasNext {
-		m += buf.Next.FFwd(n - m)
-	}
-
-	buf.Defrag()
-
-	return m
-}
-
 func (buf *Chain) Defrag() {
 	for !Full(buf.Buf) && buf.HasNext && !Empty(buf.Next) {
 		r := io.LimitReader(buf.Next, Gap(buf.Buf))

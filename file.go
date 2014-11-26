@@ -3,7 +3,6 @@ package buffer
 import (
 	"encoding/gob"
 	"errors"
-	"io"
 	"io/ioutil"
 	"os"
 	"sync"
@@ -27,16 +26,13 @@ func SetDataDir(path string, perm os.FileMode) (err error) {
 type File struct {
 	file     *os.File
 	Filename string
-	N        int64
-	L        int64
-	ROff     int64
-	WOff     int64
+	Wrapper
 }
 
 func NewFile(N int64) *File {
-	buf := &File{
-		N: N,
-	}
+	buf := &File{}
+	buf.Wrapper.N = N
+	buf.init()
 	return buf
 }
 
@@ -59,76 +55,38 @@ func (buf *File) init() (err error) {
 
 		buf.file = file
 		buf.Filename = file.Name()
-		buf.ROff = 0
-		buf.WOff = 0
+		buf.Wrapper.rwa = file
 	}
 
 	return nil
 }
 
-func (buf *File) Len() int64 {
-	return buf.L
-}
-
-func (buf *File) Cap() int64 {
-	return buf.N
+func (buf *File) Read(p []byte) (n int, err error) {
+	if err = buf.init(); err != nil {
+		return n, err
+	}
+	return buf.Wrapper.Read(p)
 }
 
 func (buf *File) ReadAt(p []byte, off int64) (n int, err error) {
-	if err := buf.init(); err != nil {
-		return 0, err
+	if err = buf.init(); err != nil {
+		return n, err
 	}
-
-	wrap := NewWrapReader(buf.file, buf.ROff+off, buf.Cap())
-	r := io.LimitReader(wrap, buf.Len()-off)
-	return r.Read(p)
-}
-
-func (buf *File) Read(p []byte) (n int, err error) {
-	if err := buf.init(); err != nil {
-		return 0, err
-	}
-
-	wrap := NewWrapReader(buf.file, buf.ROff, buf.Cap())
-	r := io.LimitReader(wrap, buf.Len())
-
-	n, err = r.Read(p)
-	buf.L -= int64(n)
-	buf.ROff = (buf.ROff + int64(n)) % buf.Cap()
-
-	if Empty(buf) {
-		buf.Reset()
-	}
-
-	return n, err
+	return buf.Wrapper.ReadAt(p, off)
 }
 
 func (buf *File) Write(p []byte) (n int, err error) {
-	if err := buf.init(); err != nil {
-		return 0, err
+	if err = buf.init(); err != nil {
+		return n, err
 	}
-
-	wrap := NewWrapWriter(buf.file, buf.WOff, buf.Cap())
-	w := LimitWriter(wrap, Gap(buf))
-	n, err = w.Write(p)
-	buf.L += int64(n)
-	buf.WOff = (buf.WOff + int64(n)) % buf.Cap()
-
-	return n, err
+	return buf.Wrapper.Write(p)
 }
 
 func (buf *File) WriteAt(p []byte, off int64) (n int, err error) {
-	if err := buf.init(); err != nil {
-		return 0, err
+	if err = buf.init(); err != nil {
+		return n, err
 	}
-
-	wrap := NewWrapWriter(buf.file, off, buf.Cap())
-	w := LimitWriter(wrap, buf.Cap()-off)
-	n, err = w.Write(p)
-	if off+int64(n) > buf.Len() {
-		buf.L = int64(n) + off
-	}
-	return n, err
+	return buf.Wrapper.WriteAt(p, off)
 }
 
 func (buf *File) Reset() {
@@ -137,20 +95,9 @@ func (buf *File) Reset() {
 		os.Remove(buf.file.Name())
 		buf.file = nil
 		buf.Filename = ""
-		buf.ROff = 0
-		buf.WOff = 0
+		buf.Wrapper.L = 0
+		buf.Wrapper.O = 0
 	}
-}
-
-func (buf *File) FFwd(n int64) int64 {
-	if int64(n) > buf.Len() {
-		n = buf.Len()
-	}
-
-	buf.L -= int64(n)
-	buf.ROff = (buf.ROff + int64(n)) % buf.Cap()
-
-	return n
 }
 
 func init() {
