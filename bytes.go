@@ -1,9 +1,11 @@
 package buffer
 
+import "github.com/djherbis/buffer/wrapio"
+
 type Bytes []byte
 
 func NewBytes(n int64) BufferAt {
-	return NewWrapper(Bytes(make([]byte, n)), n)
+	return wrapio.NewWrapper(Bytes(make([]byte, n)), n)
 }
 
 // BUG(Dustin): off past end?

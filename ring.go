@@ -1,19 +1,23 @@
 package buffer
 
-import "io"
+import (
+	"io"
+
+	"github.com/djherbis/buffer/wrapio"
+)
 
 type Ring struct {
 	BufferAt
 	L int64
-	*WrapReader
-	*WrapWriter
+	*wrapio.WrapReader
+	*wrapio.WrapWriter
 }
 
 func NewRing(buffer BufferAt) Buffer {
 	return &Ring{
 		BufferAt:   buffer,
-		WrapReader: NewWrapReader(buffer, 0, buffer.Cap()),
-		WrapWriter: NewWrapWriter(buffer, 0, buffer.Cap()),
+		WrapReader: wrapio.NewWrapReader(buffer, 0, buffer.Cap()),
+		WrapWriter: wrapio.NewWrapWriter(buffer, 0, buffer.Cap()),
 	}
 }
 
@@ -46,6 +50,6 @@ func (buf *Ring) Write(p []byte) (n int, err error) {
 func (buf *Ring) Reset() {
 	buf.BufferAt.Reset()
 	buf.L = 0
-	buf.WrapReader = NewWrapReader(buf.BufferAt, 0, buf.BufferAt.Cap())
-	buf.WrapWriter = NewWrapWriter(buf.BufferAt, 0, buf.BufferAt.Cap())
+	buf.WrapReader = wrapio.NewWrapReader(buf.BufferAt, 0, buf.BufferAt.Cap())
+	buf.WrapWriter = wrapio.NewWrapWriter(buf.BufferAt, 0, buf.BufferAt.Cap())
 }

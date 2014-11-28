@@ -5,6 +5,8 @@ import (
 	"encoding/gob"
 	"fmt"
 	"io"
+
+	"github.com/djherbis/buffer/limio"
 )
 
 type Memory struct {
@@ -28,7 +30,7 @@ func (buf *Memory) Len() int64 {
 }
 
 func (buf *Memory) Write(p []byte) (n int, err error) {
-	return LimitWriter(buf.Buffer, Gap(buf)).Write(p)
+	return limio.LimitWriter(buf.Buffer, Gap(buf)).Write(p)
 }
 
 // Must Add io.ErrShortWrite

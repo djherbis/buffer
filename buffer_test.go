@@ -8,6 +8,8 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/djherbis/buffer/wrapio"
 )
 
 func BenchmarkSlice(b *testing.B) {
@@ -82,7 +84,7 @@ func TestFull(t *testing.T) {
 /**/
 func TestGob(t *testing.T) {
 	str := "HelloWorld"
-	buf := NewMulti(New(2), NewPartition(func() Buffer { return NewFile(2) }))
+	buf := NewFile(20) //NewMulti(New(2), NewPartition(func() Buffer { return NewFile(2) }))
 	buf.Write([]byte(str))
 	b := bytes.NewBuffer(nil)
 	var test Buffer = buf
@@ -96,7 +98,9 @@ func TestGob(t *testing.T) {
 		return
 	}
 	data := make([]byte, 10)
-	buffer.Read(data)
+	if _, err := buffer.Read(data); err != nil && err != io.EOF {
+		t.Error(err.Error())
+	}
 	if !bytes.Equal(data, []byte(str)) {
 		t.Error("Gob Recover Failed... " + string(data))
 	}
@@ -116,11 +120,11 @@ func TestSpill(t *testing.T) {
 }
 
 func TestWrap(t *testing.T) {
-	if file, err := ioutil.TempFile("D:\\Downloads\\temp", "wrap.test"); err == nil {
-		w := NewWrapWriter(file, 0, 3)
+	if file, err := ioutil.TempFile("", "wrap.test"); err == nil {
+		w := wrapio.NewWrapWriter(file, 0, 3)
 		w.Write([]byte("abcdef"))
 
-		r := NewWrapReader(file, 0, 2)
+		r := wrapio.NewWrapReader(file, 0, 2)
 		data := make([]byte, 6)
 		r.Read(data)
 		if !bytes.Equal(data, []byte("dedede")) {

@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"os"
 	"sync"
+
+	"github.com/djherbis/buffer/wrapio"
 )
 
 var dataDir string
@@ -26,12 +28,13 @@ func SetDataDir(path string, perm os.FileMode) (err error) {
 type File struct {
 	file     *os.File
 	Filename string
-	Wrapper
+	N        int64
+	*wrapio.Wrapper
 }
 
 func NewFile(N int64) *File {
 	buf := &File{}
-	buf.Wrapper.N = N
+	buf.N = N
 	buf.init()
 	return buf
 }
@@ -55,7 +58,12 @@ func (buf *File) init() (err error) {
 
 		buf.file = file
 		buf.Filename = file.Name()
-		buf.Wrapper.rwa = file
+		newWrapper := wrapio.NewWrapper(file, buf.N)
+		if buf.Wrapper != nil {
+			newWrapper.L = buf.Wrapper.L
+		}
+		buf.Wrapper = newWrapper
+
 	}
 
 	return nil
