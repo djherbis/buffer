@@ -2,7 +2,7 @@ package buffer
 
 type Bytes []byte
 
-func NewBytes(n int64) Buffer {
+func NewBytes(n int64) BufferAt {
 	return NewWrapper(Bytes(make([]byte, n)), n)
 }
 

@@ -22,10 +22,14 @@ type LenCaper interface {
 type Buffer interface {
 	LenCaper
 	io.Reader
-	io.ReaderAt
 	io.Writer
-	io.WriterAt
 	Reset()
+}
+
+type BufferAt interface {
+	Buffer
+	io.ReaderAt
+	io.WriterAt
 }
 
 func len64(p []byte) int64 {

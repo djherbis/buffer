@@ -26,10 +26,20 @@ func BenchmarkMemory(b *testing.B) {
 	}
 }
 
-func TestWriteAt2(t *testing.T) {
+func TestWriteAt(t *testing.T) {
 
-	b := NewFile(5)
+	b := NewBytes(5)
+	BufferAtTester(t, b)
 
+	b = New(5)
+	BufferAtTester(t, b)
+
+	b = NewFile(5)
+	BufferAtTester(t, b)
+
+}
+
+func BufferAtTester(t *testing.T, b BufferAt) {
 	b.WriteAt([]byte("abc"), 0)
 	Compare(t, b, "abc")
 
@@ -45,11 +55,10 @@ func TestWriteAt2(t *testing.T) {
 	b.Read(make([]byte, 2))
 
 	Compare(t, b, "aab")
-
 	b.Reset()
 }
 
-func Compare(t *testing.T, b Buffer, s string) {
+func Compare(t *testing.T, b BufferAt, s string) {
 	data := make([]byte, b.Len())
 	n, _ := b.ReadAt(data, 0)
 	if string(data[:n]) != s {
@@ -57,41 +66,7 @@ func Compare(t *testing.T, b Buffer, s string) {
 	}
 }
 
-func TestRing(t *testing.T) {
-	b := NewMulti(NewFile(3), NewFile(2))
-	buf := NewRing(b)
-	buf.Write([]byte("abcdef"))
-	data := make([]byte, 2)
-	if _, err := buf.ReadAt(data, 3); err != nil {
-		t.Error(err.Error())
-	}
-	if !bytes.Equal(data, []byte("ef")) {
-		t.Error("ReadAt Failed " + string(data))
-	}
-	data, _ = ioutil.ReadAll(buf)
-	if !bytes.Equal(data, []byte("bcdef")) {
-		t.Error("Write or Read Failed " + string(data))
-	}
-	b.Reset()
-}
-
-func TestWriteAt(t *testing.T) {
-	buf := NewUnboundedBuffer(3, 3)
-
-	if _, err := buf.Write([]byte("abc")); err != nil {
-		t.Error(err.Error())
-	}
-
-	if _, err := buf.WriteAt([]byte("def"), 2); err != nil {
-		t.Error(err.Error())
-	}
-
-	if data, err := ioutil.ReadAll(buf); err != nil {
-		t.Error(err.Error())
-	} else if !bytes.Equal(data, []byte("abdef")) {
-		t.Error("Not abdef: " + string(data))
-	}
-}
+// TODO Rebuild Ring Tests
 
 func TestFull(t *testing.T) {
 	filebuf := NewFile(3)
@@ -138,17 +113,6 @@ func TestSpill(t *testing.T) {
 	if !bytes.Equal(data[:n], []byte("Hello")) {
 		t.Error("ReadAt Failed. " + string(data[:n]))
 	}
-}
-
-func TestReadAt(t *testing.T) {
-	buf := NewUnboundedBuffer(1, 1)
-	buf.Write([]byte("Hello World"))
-	data := make([]byte, 10)
-	n, _ := buf.ReadAt(data, 6)
-	if !bytes.Equal(data[:n], []byte("World")) {
-		t.Error("ReadAt Failed. " + string(data[:n]))
-	}
-	buf.Reset()
 }
 
 func TestWrap(t *testing.T) {

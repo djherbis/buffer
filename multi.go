@@ -63,26 +63,6 @@ func (buf *Chain) Len() (n int64) {
 	return buf.Buf.Len()
 }
 
-func (buf *Chain) ReadAt(p []byte, off int64) (n int, err error) {
-	n, err = buf.Buf.ReadAt(p, off)
-	p = p[n:]
-
-	if len(p) > 0 && buf.HasNext && (err == nil || err == io.EOF) {
-		if off > buf.Buf.Len() {
-			off -= buf.Buf.Len()
-		} else {
-			off = 0
-		}
-		m, err := buf.Next.ReadAt(p, off)
-		n += m
-		if err != nil {
-			return n, err
-		}
-	}
-
-	return n, err
-}
-
 func (buf *Chain) Defrag() {
 	for !Full(buf.Buf) && buf.HasNext && !Empty(buf.Next) {
 		r := io.LimitReader(buf.Next, Gap(buf.Buf))
@@ -120,28 +100,6 @@ func (buf *Chain) Write(p []byte) (n int, err error) {
 			return n, err
 		}
 	}
-	return n, err
-}
-
-func (buf *Chain) WriteAt(p []byte, off int64) (n int, err error) {
-	n, err = buf.Buf.WriteAt(p, off)
-	p = p[n:]
-
-	if len(p) > 0 && buf.HasNext && (err == nil || err == io.ErrShortBuffer) {
-		if off > buf.Buf.Len() {
-			off -= buf.Buf.Len()
-		} else {
-			off = 0
-		}
-
-		var m int
-		m, err = buf.Next.WriteAt(p, off)
-		n += m
-		if err != nil {
-			return n, err
-		}
-	}
-
 	return n, err
 }
 

@@ -22,42 +22,6 @@ func (buf *Partition) Cap() int64 {
 	return MAXINT64
 }
 
-func (buf *Partition) ReadAt(p []byte, off int64) (n int, err error) {
-	index := 0
-	for off > 0 && index < len(buf.BufferList) {
-		buffer := buf.BufferList[index]
-		if off >= buffer.Len() {
-			off -= buffer.Len()
-			index++
-		} else {
-			break
-		}
-	}
-
-	for len(p) > 0 {
-
-		if index >= len(buf.BufferList) {
-			return n, io.EOF
-		}
-
-		buffer := buf.BufferList[index]
-
-		m, er := buffer.ReadAt(p, off)
-		n += m
-		p = p[m:]
-
-		if er == io.EOF || int64(m)+off == buffer.Len() {
-			index++
-			off = 0
-		} else if er != nil {
-			return n, er
-		}
-
-	}
-
-	return n, nil
-}
-
 func (buf *Partition) Read(p []byte) (n int, err error) {
 	for len(p) > 0 {
 
@@ -109,49 +73,6 @@ func (buf *Partition) Write(p []byte) (n int, err error) {
 		}
 
 	}
-	return n, nil
-}
-
-func (buf *Partition) WriteAt(p []byte, off int64) (n int, err error) {
-	if off > buf.Len() {
-		return 0, io.ErrShortBuffer
-	}
-
-	index := 0
-	for off > 0 && index < len(buf.BufferList) {
-		buffer := buf.BufferList[index]
-		if off >= buffer.Len() {
-			off -= buffer.Len()
-			index++
-		} else {
-			break
-		}
-	}
-
-	for len(p) > 0 {
-
-		if index >= len(buf.BufferList) {
-			if off > 0 {
-				return n, io.ErrShortBuffer
-			}
-			buf.BufferList.Push(buf.make())
-		}
-
-		buffer := buf.BufferList[index]
-
-		m, er := buffer.WriteAt(p, off)
-		n += m
-		p = p[m:]
-
-		if er == io.ErrShortBuffer || int64(m)+off == buffer.Cap() {
-			index++
-			off = 0
-		} else if er != nil {
-			return n, er
-		}
-
-	}
-
 	return n, nil
 }
 
