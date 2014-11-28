@@ -73,7 +73,13 @@ func (buf *File) Read(p []byte) (n int, err error) {
 	if err = buf.init(); err != nil {
 		return n, err
 	}
-	return buf.Wrapper.Read(p)
+	n, err = buf.Wrapper.Read(p)
+	if Empty(buf) {
+		buf.file.Close()
+		os.Remove(buf.file.Name())
+		buf.file = nil
+	}
+	return n, err
 }
 
 func (buf *File) ReadAt(p []byte, off int64) (n int, err error) {
