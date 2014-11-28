@@ -75,9 +75,7 @@ func (buf *File) Read(p []byte) (n int, err error) {
 	}
 	n, err = buf.Wrapper.Read(p)
 	if Empty(buf) {
-		buf.file.Close()
-		os.Remove(buf.file.Name())
-		buf.file = nil
+		buf.Reset()
 	}
 	return n, err
 }
