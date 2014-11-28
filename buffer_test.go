@@ -71,7 +71,7 @@ func Compare(t *testing.T, b BufferAt, s string) {
 func TestFull(t *testing.T) {
 	filebuf := NewFile(3)
 	filebuf.Filename = "/dev/full"
-	buf := Spill{filebuf, ioutil.Discard}
+	buf := NewSpill(filebuf, ioutil.Discard)
 	if _, err := os.Stat(filebuf.Filename); !os.IsNotExist(err) {
 		if _, err := buf.Write([]byte("abc")); err != nil {
 			t.Error("SpillBuffer failed")
