@@ -1,10 +1,12 @@
 package buffer
 
 import (
+	"bytes"
 	"encoding/gob"
 	"errors"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"sync"
 
 	"github.com/djherbis/buffer/wrapio"
@@ -12,6 +14,13 @@ import (
 
 var dataDir string
 var setDataDir sync.Once
+
+func DataDir() string {
+	if dataDir == "" {
+		return os.TempDir()
+	}
+	return dataDir
+}
 
 // BUG(Dustin): Path is created even if its not used.
 func SetDataDir(path string, perm os.FileMode) (err error) {
@@ -33,8 +42,10 @@ type File struct {
 }
 
 func NewFile(N int64) *File {
-	buf := &File{}
-	buf.N = N
+	buf := &File{
+		N:       N,
+		Wrapper: wrapio.NewWrapper(nil, N),
+	}
 	buf.init()
 	return buf
 }
@@ -58,12 +69,8 @@ func (buf *File) init() (err error) {
 
 		buf.file = file
 		buf.Filename = file.Name()
-		newWrapper := wrapio.NewWrapper(file, buf.N)
-		if buf.Wrapper != nil {
-			newWrapper.L = buf.Wrapper.L
-		}
-		buf.Wrapper = newWrapper
-
+		buf.Wrapper.SetReadWriterAt(file)
+		tracker.Track(file.Name())
 	}
 
 	return nil
@@ -105,11 +112,41 @@ func (buf *File) Reset() {
 	if buf.file != nil {
 		buf.file.Close()
 		os.Remove(buf.file.Name())
+		tracker.Untrack(buf.Filename)
 		buf.file = nil
 		buf.Filename = ""
 		buf.Wrapper.L = 0
 		buf.Wrapper.O = 0
 	}
+}
+
+func Clean(path string) {
+	if filenames, err := filepath.Glob(filepath.Join(path, "buffer*")); err == nil {
+		for _, filename := range filenames {
+			if !tracker.IsTracked(filename) {
+				os.Remove(filename)
+			}
+		}
+	}
+}
+
+func (buf *File) GobEncode() ([]byte, error) {
+	w := bytes.NewBuffer(nil)
+	enc := gob.NewEncoder(w)
+	enc.Encode(&buf.Filename)
+	enc.Encode(&buf.N)
+	enc.Encode(&buf.Wrapper)
+	return w.Bytes(), nil
+}
+
+func (buf *File) GobDecode(data []byte) (err error) {
+	r := bytes.NewBuffer(data)
+	dec := gob.NewDecoder(r)
+	dec.Decode(&buf.Filename)
+	dec.Decode(&buf.N)
+	dec.Decode(&buf.Wrapper)
+	buf.init()
+	return err
 }
 
 func init() {

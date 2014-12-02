@@ -83,6 +83,7 @@ func TestGob(t *testing.T) {
 		t.Error(err.Error())
 		return
 	}
+	Clean(DataDir())
 	var buffer Buffer
 	if err := gob.NewDecoder(b).Decode(&buffer); err != nil {
 		t.Error(err.Error())

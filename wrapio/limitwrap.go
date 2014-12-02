@@ -39,6 +39,10 @@ func (wpr *Wrapper) Reset() {
 	wpr.L = 0
 }
 
+func (wpr *Wrapper) SetReadWriterAt(rwa ReadWriterAt) {
+	wpr.rwa = rwa
+}
+
 func (wpr *Wrapper) Read(p []byte) (n int, err error) {
 	n, err = wpr.ReadAt(p, 0)
 	wpr.L -= int64(n)
