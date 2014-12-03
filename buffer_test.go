@@ -75,7 +75,7 @@ func Compare(t *testing.T, b BufferAt, s string) {
 /**/
 func TestGob(t *testing.T) {
 	str := "HelloWorld"
-	buf := NewFile(20) //NewMulti(New(2), NewPartition(func() Buffer { return NewFile(2) }))
+	buf := NewUnboundedBuffer(2, 2)
 	buf.Write([]byte(str))
 	b := bytes.NewBuffer(nil)
 	var test Buffer = buf

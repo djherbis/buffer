@@ -66,14 +66,14 @@ func init() {
 
 func (buf *Memory) MarshalBinary() ([]byte, error) {
 	var b bytes.Buffer
-	fmt.Fprint(&b, buf.N)
+	fmt.Fprintln(&b, buf.N)
 	b.Write(buf.Bytes())
 	return b.Bytes(), nil
 }
 
 func (buf *Memory) UnmarshalBinary(data []byte) error {
 	b := bytes.NewBuffer(data)
-	_, err := fmt.Fscan(b, &buf.N)
-	buf.Buffer = b
+	_, err := fmt.Fscanln(b, &buf.N)
+	buf.Buffer = bytes.NewBuffer(b.Bytes())
 	return err
 }
