@@ -125,9 +125,23 @@ buf := buf.NewDiscard()
 Custom Buffers
 ------------
 
-Feel free to implement your own buffer, just meet the required interface and compose away!
+Feel free to implement your own buffer, just meet the required interface (Buffer/BufferAt) and compose away!
 
 ```go
+
+// Simple interfaces
+type Lener interface {
+	Len() int64
+}
+
+type Caper interface {
+	Cap() int64
+}
+
+type LenCaper interface {
+	Lener
+	Caper
+}
 
 // Buffer Interface used by Multi and Partition
 type Buffer interface {
