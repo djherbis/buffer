@@ -122,6 +122,30 @@ import (
 buf := buf.NewDiscard()
 ```
 
+Custom Buffers
+------------
+
+Feel free to implement your own buffer, just meet the required interface and compose away!
+
+```go
+
+// Buffer Interface used by Multi and Partition
+type Buffer interface {
+	LenCaper
+	io.Reader
+	io.Writer
+	Reset()
+}
+
+// BufferAt interface used by Ring
+type BufferAt interface {
+	Buffer
+	io.ReaderAt
+	io.WriterAt
+}
+
+```
+
 Installation
 ------------
 ```sh
