@@ -2,8 +2,6 @@ package buffer
 
 import "sync"
 
-var empty struct{}
-
 type strset struct {
 	sync.RWMutex
 	objects map[string]struct{}
@@ -16,7 +14,7 @@ var tracker strset = strset{
 func (t *strset) Track(s string) {
 	t.Lock()
 	defer t.Unlock()
-	t.objects[s] = empty
+	t.objects[s] = struct{}{}
 }
 
 func (t *strset) Untrack(s string) {
