@@ -71,7 +71,9 @@ func (buf *Memory) MarshalBinary() ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-func (buf *Memory) UnmarshalBinary(data []byte) error {
+func (buf *Memory) UnmarshalBinary(bindata []byte) error {
+	data := make([]byte, len(bindata))
+	copy(data, bindata)
 	b := bytes.NewBuffer(data)
 	_, err := fmt.Fscanln(b, &buf.N)
 	buf.Buffer = bytes.NewBuffer(b.Bytes())
