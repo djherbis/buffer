@@ -132,7 +132,7 @@ Feel free to implement your own buffer, just meet the required interface (Buffer
 // Buffer Interface used by Multi and Partition
 type Buffer interface {
 	Len() int64
-  	Cap() int64
+	Cap() int64
 	io.Reader
 	io.Writer
 	Reset()
