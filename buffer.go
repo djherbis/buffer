@@ -6,21 +6,9 @@ import (
 
 const MAXINT64 = 9223372036854775807
 
-type Lener interface {
-	Len() int64
-}
-
-type Caper interface {
-	Cap() int64
-}
-
-type LenCaper interface {
-	Lener
-	Caper
-}
-
 type Buffer interface {
-	LenCaper
+	Len() int64
+	Cap() int64
 	io.Reader
 	io.Writer
 	Reset()
@@ -36,15 +24,15 @@ func len64(p []byte) int64 {
 	return int64(len(p))
 }
 
-func Gap(buf LenCaper) int64 {
+func Gap(buf Buffer) int64 {
 	return buf.Cap() - buf.Len()
 }
 
-func Full(buf LenCaper) bool {
+func Full(buf Buffer) bool {
 	return Gap(buf) == 0
 }
 
-func Empty(l Lener) bool {
+func Empty(l Buffer) bool {
 	return l.Len() == 0
 }
 
