@@ -129,23 +129,10 @@ Feel free to implement your own buffer, just meet the required interface (Buffer
 
 ```go
 
-// Simple interfaces
-type Lener interface {
-	Len() int64
-}
-
-type Caper interface {
-	Cap() int64
-}
-
-type LenCaper interface {
-	Lener
-	Caper
-}
-
 // Buffer Interface used by Multi and Partition
 type Buffer interface {
-	LenCaper
+	Len() int64
+  Cap() int64
 	io.Reader
 	io.Writer
 	Reset()
