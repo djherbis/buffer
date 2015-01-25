@@ -39,7 +39,7 @@ type memPool struct {
 	N int64
 }
 
-func NewMemPool(N int64) *memPool {
+func NewMemPool(N int64) BufferPool {
 	return &memPool{N: N}
 }
 
@@ -51,7 +51,7 @@ type filePool struct {
 	Directory string
 }
 
-func NewFilePool(N int64, dir string) *filePool {
+func NewFilePool(N int64, dir string) BufferPool {
 	return &filePool{N: N, Directory: dir}
 }
 
