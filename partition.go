@@ -5,23 +5,23 @@ import (
 	"io"
 )
 
-type Partition struct {
+type partition struct {
 	BufferList
 	BufferPool
 }
 
-func NewPartition(pool BufferPool, buffers ...Buffer) *Partition {
-	return &Partition{
+func NewPartition(pool BufferPool, buffers ...Buffer) *partition {
+	return &partition{
 		BufferPool: pool,
 		BufferList: buffers,
 	}
 }
 
-func (buf *Partition) Cap() int64 {
+func (buf *partition) Cap() int64 {
 	return MAXINT64
 }
 
-func (buf *Partition) Read(p []byte) (n int, err error) {
+func (buf *partition) Read(p []byte) (n int, err error) {
 	for len(p) > 0 {
 
 		if len(buf.BufferList) == 0 {
@@ -47,7 +47,7 @@ func (buf *Partition) Read(p []byte) (n int, err error) {
 	return n, nil
 }
 
-func (buf *Partition) Write(p []byte) (n int, err error) {
+func (buf *partition) Write(p []byte) (n int, err error) {
 	for len(p) > 0 {
 
 		if len(buf.BufferList) == 0 {
@@ -75,12 +75,12 @@ func (buf *Partition) Write(p []byte) (n int, err error) {
 	return n, nil
 }
 
-func (buf *Partition) Reset() {
+func (buf *partition) Reset() {
 	for len(buf.BufferList) > 0 {
 		buf.BufferPool.Put(buf.Pop())
 	}
 }
 
 func init() {
-	gob.Register(&Partition{})
+	gob.Register(&partition{})
 }

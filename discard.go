@@ -6,38 +6,38 @@ import (
 	"io/ioutil"
 )
 
-type Discard struct{}
+type discard struct{}
 
-func NewDiscard() *Discard {
-	return &Discard{}
+func NewDiscard() Buffer {
+	return &discard{}
 }
 
-func (buf *Discard) Len() int64 {
+func (buf *discard) Len() int64 {
 	return 0
 }
 
-func (buf *Discard) Cap() int64 {
+func (buf *discard) Cap() int64 {
 	return MAXINT64
 }
 
-func (buf *Discard) Reset() {}
+func (buf *discard) Reset() {}
 
-func (buf *Discard) Read(p []byte) (n int, err error) {
+func (buf *discard) Read(p []byte) (n int, err error) {
 	return 0, io.EOF
 }
 
-func (buf *Discard) ReadAt(p []byte, off int64) (n int, err error) {
+func (buf *discard) ReadAt(p []byte, off int64) (n int, err error) {
 	return 0, io.EOF
 }
 
-func (buf *Discard) Write(p []byte) (int, error) {
+func (buf *discard) Write(p []byte) (int, error) {
 	return ioutil.Discard.Write(p)
 }
 
-func (buf *Discard) WriteAt(p []byte, off int64) (int, error) {
+func (buf *discard) WriteAt(p []byte, off int64) (int, error) {
 	return ioutil.Discard.Write(p)
 }
 
 func init() {
-	gob.Register(&Discard{})
+	gob.Register(&discard{})
 }

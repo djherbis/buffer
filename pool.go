@@ -64,7 +64,7 @@ func (p *filePool) Get() Buffer {
 }
 
 func (p *filePool) Put(buf Buffer) {
-	if fileBuf, ok := buf.(*FileBuffer); ok {
+	if fileBuf, ok := buf.(*fileBuffer); ok {
 		fileBuf.file.Close()
 		os.Remove(fileBuf.file.Name())
 	}

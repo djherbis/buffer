@@ -9,32 +9,32 @@ import (
 	"github.com/djherbis/buffer/limio"
 )
 
-type Memory struct {
+type memory struct {
 	N int64
 	*bytes.Buffer
 }
 
-func New(n int64) *Memory {
-	return &Memory{
+func New(n int64) *memory {
+	return &memory{
 		N:      n,
 		Buffer: bytes.NewBuffer(nil),
 	}
 }
 
-func (buf *Memory) Cap() int64 {
+func (buf *memory) Cap() int64 {
 	return buf.N
 }
 
-func (buf *Memory) Len() int64 {
+func (buf *memory) Len() int64 {
 	return int64(buf.Buffer.Len())
 }
 
-func (buf *Memory) Write(p []byte) (n int, err error) {
+func (buf *memory) Write(p []byte) (n int, err error) {
 	return limio.LimitWriter(buf.Buffer, Gap(buf)).Write(p)
 }
 
 // Must Add io.ErrShortWrite
-func (buf *Memory) WriteAt(p []byte, off int64) (n int, err error) {
+func (buf *memory) WriteAt(p []byte, off int64) (n int, err error) {
 	if off > buf.Len() {
 		return 0, io.ErrShortBuffer
 	} else if len64(p)+off <= buf.Len() {
@@ -48,30 +48,30 @@ func (buf *Memory) WriteAt(p []byte, off int64) (n int, err error) {
 	}
 }
 
-func (buf *Memory) ReadAt(p []byte, off int64) (n int, err error) {
+func (buf *memory) ReadAt(p []byte, off int64) (n int, err error) {
 	return bytes.NewReader(buf.Bytes()).ReadAt(p, off)
 }
 
-func (buf *Memory) Read(p []byte) (n int, err error) {
+func (buf *memory) Read(p []byte) (n int, err error) {
 	return io.LimitReader(buf.Buffer, buf.Len()).Read(p)
 }
 
-func (buf *Memory) ReadFrom(r io.Reader) (n int64, err error) {
+func (buf *memory) ReadFrom(r io.Reader) (n int64, err error) {
 	return buf.Buffer.ReadFrom(io.LimitReader(r, Gap(buf)))
 }
 
 func init() {
-	gob.Register(&Memory{})
+	gob.Register(&memory{})
 }
 
-func (buf *Memory) MarshalBinary() ([]byte, error) {
+func (buf *memory) MarshalBinary() ([]byte, error) {
 	var b bytes.Buffer
 	fmt.Fprintln(&b, buf.N)
 	b.Write(buf.Bytes())
 	return b.Bytes(), nil
 }
 
-func (buf *Memory) UnmarshalBinary(bindata []byte) error {
+func (buf *memory) UnmarshalBinary(bindata []byte) error {
 	data := make([]byte, len(bindata))
 	copy(data, bindata)
 	b := bytes.NewBuffer(data)

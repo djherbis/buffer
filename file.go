@@ -19,23 +19,23 @@ type File interface {
 	Close() error
 }
 
-type FileBuffer struct {
+type fileBuffer struct {
 	file File
 	*wrapio.Wrapper
 }
 
-func NewFile(N int64, file File) *FileBuffer {
-	return &FileBuffer{
+func NewFile(N int64, file File) *fileBuffer {
+	return &fileBuffer{
 		file:    file,
 		Wrapper: wrapio.NewWrapper(file, N),
 	}
 }
 
 func init() {
-	gob.Register(&FileBuffer{})
+	gob.Register(&fileBuffer{})
 }
 
-func (buf *FileBuffer) MarshalBinary() ([]byte, error) {
+func (buf *fileBuffer) MarshalBinary() ([]byte, error) {
 	fullpath, err := filepath.Abs(filepath.Dir(buf.file.Name()))
 	if err != nil {
 		return nil, err
@@ -49,7 +49,7 @@ func (buf *FileBuffer) MarshalBinary() ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
-func (buf *FileBuffer) UnmarshalBinary(data []byte) error {
+func (buf *fileBuffer) UnmarshalBinary(data []byte) error {
 	buffer := bytes.NewBuffer(data)
 	var filename string
 	var N, L, O int64

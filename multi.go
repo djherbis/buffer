@@ -6,7 +6,7 @@ import (
 	"io"
 )
 
-type Chain struct {
+type chain struct {
 	Buf     Buffer
 	Next    Buffer
 	HasNext bool
@@ -19,7 +19,7 @@ func NewMulti(buffers ...Buffer) Buffer {
 		return buffers[0]
 	}
 
-	buf := &Chain{
+	buf := &chain{
 		Buf:     buffers[0],
 		Next:    NewMulti(buffers[1:]...),
 		HasNext: len(buffers[1:]) != 0,
@@ -30,14 +30,14 @@ func NewMulti(buffers ...Buffer) Buffer {
 	return buf
 }
 
-func (buf *Chain) Reset() {
+func (buf *chain) Reset() {
 	if buf.HasNext {
 		buf.Next.Reset()
 	}
 	buf.Buf.Reset()
 }
 
-func (buf *Chain) Cap() (n int64) {
+func (buf *chain) Cap() (n int64) {
 	if buf.HasNext {
 		Next := buf.Next.Cap()
 		if buf.Buf.Cap() > MAXINT64-Next {
@@ -50,7 +50,7 @@ func (buf *Chain) Cap() (n int64) {
 	return buf.Buf.Cap()
 }
 
-func (buf *Chain) Len() (n int64) {
+func (buf *chain) Len() (n int64) {
 	if buf.HasNext {
 		Next := buf.Next.Len()
 		if buf.Buf.Len() > MAXINT64-Next {
@@ -63,7 +63,7 @@ func (buf *Chain) Len() (n int64) {
 	return buf.Buf.Len()
 }
 
-func (buf *Chain) Defrag() {
+func (buf *chain) Defrag() {
 	for !Full(buf.Buf) && buf.HasNext && !Empty(buf.Next) {
 		r := io.LimitReader(buf.Next, Gap(buf.Buf))
 		if _, err := io.Copy(buf.Buf, r); err != nil && err != io.EOF {
@@ -72,7 +72,7 @@ func (buf *Chain) Defrag() {
 	}
 }
 
-func (buf *Chain) Read(p []byte) (n int, err error) {
+func (buf *chain) Read(p []byte) (n int, err error) {
 	n, err = buf.Buf.Read(p)
 	p = p[n:]
 	if len(p) > 0 && buf.HasNext && (err == nil || err == io.EOF) {
@@ -88,7 +88,7 @@ func (buf *Chain) Read(p []byte) (n int, err error) {
 	return n, err
 }
 
-func (buf *Chain) Write(p []byte) (n int, err error) {
+func (buf *chain) Write(p []byte) (n int, err error) {
 	if n, err = buf.Buf.Write(p); err == io.ErrShortBuffer && buf.HasNext {
 		err = nil
 	}
@@ -104,10 +104,10 @@ func (buf *Chain) Write(p []byte) (n int, err error) {
 }
 
 func init() {
-	gob.Register(&Chain{})
+	gob.Register(&chain{})
 }
 
-func (buf *Chain) MarshalBinary() ([]byte, error) {
+func (buf *chain) MarshalBinary() ([]byte, error) {
 	b := bytes.NewBuffer(nil)
 	enc := gob.NewEncoder(b)
 	enc.Encode(&buf.Buf)
@@ -118,7 +118,7 @@ func (buf *Chain) MarshalBinary() ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-func (buf *Chain) UnmarshalBinary(data []byte) error {
+func (buf *chain) UnmarshalBinary(data []byte) error {
 	b := bytes.NewBuffer(data)
 	dec := gob.NewDecoder(b)
 	if err := dec.Decode(&buf.Buf); err != nil {
