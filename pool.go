@@ -7,6 +7,11 @@ import (
 	"sync"
 )
 
+type BufferPool interface {
+	Get() Buffer
+	Put(buf Buffer)
+}
+
 type Pool struct {
 	pool sync.Pool
 }

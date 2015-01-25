@@ -5,11 +5,6 @@ import (
 	"io"
 )
 
-type BufferPool interface {
-	Get() Buffer
-	Put(buf Buffer)
-}
-
 type Partition struct {
 	BufferList
 	BufferPool
