@@ -32,15 +32,32 @@ Supported Buffers
 
 Memory: Wrapper for bytes.Buffer
 
-File: File-based buffering. The file never exceeds Cap() in length, no matter how many times its written/read from. It accomplishes this by "wrapping" around the fixed max-length file when the data gets too long but there is available freed space at the beginning of the file. The file deletes itself when empty.
+File: File-based buffering. The file never exceeds Cap() in length, no matter how many times its written/read from. It accomplishes this by "wrapping" around the fixed max-length file when the data gets too long but there is available freed space at the beginning of the file. The caller is responsible for closing and deleting the file when done.
 
 ```go
 import (
+  "ioutil"
+  "os"
+  
   "github.com/djherbis/buffer"
 )
 
 // Create a File-based Buffer with max size 100MB
-buf := buffer.NewFile(100*1024*1024)
+file, err := ioutil.TempFile("", "buffer")
+if err != nil {
+	return err
+}
+defer os.Remove(file.Name())
+defer file.Close()
+
+buf := buffer.NewFile(100*1024*1024, file)
+
+// A simpler way:
+pool := NewFilePool(100*1024*1024, "") // "" -- use temp dir
+buf := pool.Get()   // allocate the buffer
+                    // use your buffer here
+defer pool.Put(buf) // close and remove the allocated file for the buffer
+
 ```
 
 Multi: A fixed length linked-list of buffers. Each buffer reads from the next buffer so that all the buffered data is shifted upwards in the list when reading. Writes are always written to the first buffer in the list whose Len() < Cap().
@@ -51,7 +68,7 @@ import (
 )
 
 mem  := buffer.New(32*1024)
-file := buffer.NewFile(100*1024*1024)
+file := buffer.NewFile(100*1024*1024, someFileObj)) // you'll need to manage Open(), Close() and Delete someFileObj
 
 // Buffer composed of 32KB of memory, and 100MB of file.
 buf := buffer.NewMulti(mem, file)
@@ -67,14 +84,10 @@ import (
 )
 
 // Create 32 KB sized-chunks of memory as needed to expand/contract the buffer size.
-buf := buffer.NewPartition(func() buffer.Buffer{
-  return buffer.New(32*1024)
-})
+buf := buffer.NewPartition(NewMemPool(32*1024))
 
 // Create 100 MB sized-chunks of files as needed to expand/contract the buffer size.
-buf = buffer.NewPartition(func() buffer.Buffer{
-  return buffer.NewFile(100*1024*1024)
-})
+buf = buffer.NewPartition(NewFilePool(100*1024*1024, ""))
 ```
 
 Ring: A single buffer which begins overwriting the oldest buffered data when it reaches its capacity.
@@ -85,7 +98,7 @@ import (
 )
 
 // Create a File-based Buffer with max size 100MB
-file := buffer.NewFile(100*1024*1024)
+file := buffer.NewFile(100*1024*1024, someFileObj) // you'll need to Open(), Close() and Delete someFileObj.
 
 // If buffered data exceeds 100MB, overwrite oldest data as new data comes in
 buf := buffer.NewRing(file) // requires BufferAt interface.
