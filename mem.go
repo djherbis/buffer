@@ -14,6 +14,8 @@ type memory struct {
 	*bytes.Buffer
 }
 
+// New returns a new in memory BufferAt with max size N.
+// It's backed by a bytes.Buffer.
 func New(n int64) BufferAt {
 	return &memory{
 		N:      n,
@@ -33,7 +35,7 @@ func (buf *memory) Write(p []byte) (n int, err error) {
 	return limio.LimitWriter(buf.Buffer, Gap(buf)).Write(p)
 }
 
-// Must Add io.ErrShortWrite
+// BUG(Dustin): Should add io.ErrShortWrite
 func (buf *memory) WriteAt(p []byte, off int64) (n int, err error) {
 	if off > buf.Len() {
 		return 0, io.ErrShortBuffer

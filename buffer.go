@@ -7,14 +7,16 @@ import (
 
 const MAXINT64 = 9223372036854775807
 
+// Buffer is used to Write() data which will be Read() later.
 type Buffer interface {
-	Len() int64
-	Cap() int64
-	io.Reader
-	io.Writer
-	Reset()
+	Len() int64 // How much data is Buffered in bytes
+	Cap() int64 // How much data can be Buffered at once in bytes.
+	io.Reader   // Read() will read from the top of the buffer [io.EOF if empty]
+	io.Writer   // Write() will write to the end of the buffer [io.ErrShortBuffer if not enough space]
+	Reset()     // Truncates the buffer, Len() == 0.
 }
 
+// BufferAt is a buffer which supports io.ReaderAt and io.WriterAt
 type BufferAt interface {
 	Buffer
 	io.ReaderAt

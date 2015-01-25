@@ -24,6 +24,7 @@ type fileBuffer struct {
 	*wrapio.Wrapper
 }
 
+// NewFile returns a new BufferAt backed by "file" with max-size N.
 func NewFile(N int64, file File) BufferAt {
 	return &fileBuffer{
 		file:    file,

@@ -7,15 +7,19 @@ import (
 	"sync"
 )
 
+// Pool provides a way to Allocate and Release Buffer objects
 type Pool interface {
-	Get() Buffer
-	Put(buf Buffer)
+	Get() Buffer    // Allocate a Buffer
+	Put(buf Buffer) // Release or Reuse a Buffer
 }
 
 type pool struct {
 	pool sync.Pool
 }
 
+// NewPool returns a Pool(), it's backed by a sync.Pool so its safe for concurrent use.
+// Unlike NewMemPool or NewFilePool, this pool supports concurrent calls to Get() and Put().
+// However it will not work with gob.
 func NewPool(New func() Buffer) Pool {
 	return &pool{
 		pool: sync.Pool{
@@ -39,6 +43,8 @@ type memPool struct {
 	N int64
 }
 
+// NewMemPool returns a Pool, Get() returns an in memory buffer of max size N.
+// Put() is a nop.
 func NewMemPool(N int64) Pool {
 	return &memPool{N: N}
 }
@@ -51,6 +57,8 @@ type filePool struct {
 	Directory string
 }
 
+// NewFilePool returns a Pool, Get() returns a file-based buffer of max size N.
+// Put() closes and deletes the underlying file for the buffer.
 func NewFilePool(N int64, dir string) Pool {
 	return &filePool{N: N, Directory: dir}
 }

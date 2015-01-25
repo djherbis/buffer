@@ -8,6 +8,7 @@ import (
 
 type discard struct{}
 
+// NewDiscard creates a Buffer which writes to ioutil.Discard and read's return 0, io.EOF.
 func NewDiscard() Buffer {
 	return &discard{}
 }
