@@ -16,6 +16,7 @@ type File interface {
 	Stat() (fi os.FileInfo, err error)
 	io.ReaderAt
 	io.WriterAt
+	Close() error
 }
 
 type FileBuffer struct {
@@ -40,6 +41,7 @@ func (buf *FileBuffer) MarshalBinary() ([]byte, error) {
 		return nil, err
 	}
 	base := filepath.Base(buf.file.Name())
+	buf.file.Close()
 
 	buffer := bytes.NewBuffer(nil)
 	fmt.Fprintln(buffer, filepath.Join(fullpath, base))
@@ -57,6 +59,7 @@ func (buf *FileBuffer) UnmarshalBinary(data []byte) error {
 	if err != nil {
 		return err
 	}
+	buf.file = file
 
 	_, err = fmt.Fscanln(buffer, &N, &L, &O)
 	buf.Wrapper = wrapio.NewWrapper(file, N)

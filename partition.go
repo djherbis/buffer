@@ -5,17 +5,21 @@ import (
 	"io"
 )
 
-type Partition struct {
-	BufferList
-	make func() Buffer
+type BufferPool interface {
+	Get() Buffer
+	Put(buf Buffer)
 }
 
-func NewPartition(make func() Buffer, buffers ...Buffer) *Partition {
-	buf := &Partition{
-		make:       make,
+type Partition struct {
+	BufferList
+	BufferPool
+}
+
+func NewPartition(pool BufferPool, buffers ...Buffer) *Partition {
+	return &Partition{
+		BufferPool: pool,
 		BufferList: buffers,
 	}
-	return buf
 }
 
 func (buf *Partition) Cap() int64 {
@@ -32,7 +36,7 @@ func (buf *Partition) Read(p []byte) (n int, err error) {
 		buffer := buf.BufferList[0]
 
 		if Empty(buffer) {
-			buf.Pop()
+			buf.BufferPool.Put(buf.Pop())
 			continue
 		}
 
@@ -52,13 +56,13 @@ func (buf *Partition) Write(p []byte) (n int, err error) {
 	for len(p) > 0 {
 
 		if len(buf.BufferList) == 0 {
-			buf.Push(buf.make())
+			buf.Push(buf.BufferPool.Get())
 		}
 
 		buffer := buf.BufferList[len(buf.BufferList)-1]
 
 		if Full(buffer) {
-			buf.Push(buf.make())
+			buf.Push(buf.BufferPool.Get())
 			continue
 		}
 
@@ -74,6 +78,12 @@ func (buf *Partition) Write(p []byte) (n int, err error) {
 
 	}
 	return n, nil
+}
+
+func (buf *Partition) Reset() {
+	for len(buf.BufferList) > 0 {
+		buf.BufferPool.Put(buf.Pop())
+	}
 }
 
 func init() {

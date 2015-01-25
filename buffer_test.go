@@ -73,14 +73,7 @@ func Compare(t *testing.T, b BufferAt, s string) {
 func TestGob(t *testing.T) {
 	str := "HelloWorld"
 
-	file, err := ioutil.TempFile(os.TempDir(), "buffer")
-	if err != nil {
-		t.Error(err.Error())
-	}
-	defer os.Remove(file.Name())
-	defer file.Close()
-
-	buf := NewFile(20, file)
+	buf := NewPartition(NewFilePool(20))
 	buf.Write([]byte(str))
 	b := bytes.NewBuffer(nil)
 	var test Buffer = buf
@@ -93,14 +86,14 @@ func TestGob(t *testing.T) {
 		t.Error(err.Error())
 		return
 	}
-	data := make([]byte, 10)
+	data := make([]byte, len(str))
 	if _, err := buffer.Read(data); err != nil && err != io.EOF {
 		t.Error(err.Error())
 	}
 	if !bytes.Equal(data, []byte(str)) {
 		t.Error("Gob Recover Failed... " + string(data))
 	}
-	buf.Reset()
+	buffer.Reset()
 }
 
 /**/
@@ -162,7 +155,7 @@ func TestMem(t *testing.T) {
 }
 
 func TestFilePartition(t *testing.T) {
-	buf := NewPartition(func() Buffer { return New(1024) })
+	buf := NewPartition(NewFilePool(1024))
 	checkCap(t, buf, MAXINT64)
 	runPerfectSeries(t, buf)
 	buf.Reset()
@@ -176,7 +169,7 @@ func TestMulti(t *testing.T) {
 	defer os.Remove(file.Name())
 	defer file.Close()
 
-	buf := NewMulti(New(5), New(5), NewFile(500, file), NewPartition(func() Buffer { return New(1024) }))
+	buf := NewMulti(New(5), New(5), NewFile(500, file), NewPartition(NewFilePool(1024)))
 	checkCap(t, buf, MAXINT64)
 	runPerfectSeries(t, buf)
 	isPerfectMatch(t, buf, 1024*1024)
