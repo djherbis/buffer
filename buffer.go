@@ -35,3 +35,7 @@ func Full(buf Buffer) bool {
 func Empty(l Buffer) bool {
 	return l.Len() == 0
 }
+
+func NewUnboundedBuffer(mem, file int64) Buffer {
+	return NewMulti(New(mem), NewPartition(NewFilePool(file, "")))
+}
