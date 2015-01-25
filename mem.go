@@ -14,7 +14,7 @@ type memory struct {
 	*bytes.Buffer
 }
 
-func New(n int64) Buffer {
+func New(n int64) BufferAt {
 	return &memory{
 		N:      n,
 		Buffer: bytes.NewBuffer(nil),

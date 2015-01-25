@@ -24,7 +24,7 @@ type fileBuffer struct {
 	*wrapio.Wrapper
 }
 
-func NewFile(N int64, file File) Buffer {
+func NewFile(N int64, file File) BufferAt {
 	return &fileBuffer{
 		file:    file,
 		Wrapper: wrapio.NewWrapper(file, N),
