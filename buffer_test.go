@@ -3,6 +3,7 @@ package buffer
 import (
 	"bytes"
 	"crypto/rand"
+	"encoding/gob"
 	"io"
 	"io/ioutil"
 	"os"
@@ -68,10 +69,18 @@ func Compare(t *testing.T, b BufferAt, s string) {
 
 // TODO Rebuild Spill Tests
 
-/** TODO Rebuild marshalling
+/**/
 func TestGob(t *testing.T) {
 	str := "HelloWorld"
-	buf := NewUnboundedBuffer(2, 2)
+
+	file, err := ioutil.TempFile(os.TempDir(), "buffer")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	defer os.Remove(file.Name())
+	defer file.Close()
+
+	buf := NewFile(20, file)
 	buf.Write([]byte(str))
 	b := bytes.NewBuffer(nil)
 	var test Buffer = buf

@@ -1,33 +1,66 @@
 package buffer
 
 import (
+	"bytes"
+	"encoding/gob"
+	"fmt"
 	"io"
+	"os"
+	"path/filepath"
 
 	"github.com/djherbis/buffer/wrapio"
 )
 
 type File interface {
-	io.Reader
+	Name() string
+	Stat() (fi os.FileInfo, err error)
 	io.ReaderAt
-	io.Writer
 	io.WriterAt
 }
 
 type FileBuffer struct {
 	file File
-	N    int64
 	*wrapio.Wrapper
 }
 
 func NewFile(N int64, file File) *FileBuffer {
 	return &FileBuffer{
 		file:    file,
-		N:       N,
 		Wrapper: wrapio.NewWrapper(file, N),
 	}
 }
 
-func (buf *FileBuffer) Reset() {
-	buf.Wrapper.L = 0
-	buf.Wrapper.O = 0
+func init() {
+	gob.Register(&FileBuffer{})
+}
+
+func (buf *FileBuffer) MarshalBinary() ([]byte, error) {
+	fullpath, err := filepath.Abs(filepath.Dir(buf.file.Name()))
+	if err != nil {
+		return nil, err
+	}
+	base := filepath.Base(buf.file.Name())
+
+	buffer := bytes.NewBuffer(nil)
+	fmt.Fprintln(buffer, filepath.Join(fullpath, base))
+	fmt.Fprintln(buffer, buf.Wrapper.N, buf.Wrapper.L, buf.Wrapper.O)
+	return buffer.Bytes(), nil
+}
+
+func (buf *FileBuffer) UnmarshalBinary(data []byte) error {
+	buffer := bytes.NewBuffer(data)
+	var filename string
+	var N, L, O int64
+	_, err := fmt.Fscanln(buffer, &filename)
+
+	file, err := os.Open(filename)
+	if err != nil {
+		return err
+	}
+
+	_, err = fmt.Fscanln(buffer, &N, &L, &O)
+	buf.Wrapper = wrapio.NewWrapper(file, N)
+	buf.Wrapper.L = L
+	buf.Wrapper.O = O
+	return nil
 }
