@@ -68,7 +68,7 @@ import (
 )
 
 mem  := buffer.New(32*1024)
-file := buffer.NewFile(100*1024*1024)
+file := buffer.NewFile(100*1024*1024, someFileObj)) // you'll need to manage Open(), Close() and Delete someFileObj
 
 // Buffer composed of 32KB of memory, and 100MB of file.
 buf := buffer.NewMulti(mem, file)
