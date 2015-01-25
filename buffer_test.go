@@ -3,7 +3,6 @@ package buffer
 import (
 	"bytes"
 	"crypto/rand"
-	"encoding/gob"
 	"io"
 	"io/ioutil"
 	"os"
@@ -26,7 +25,14 @@ func TestWriteAt(t *testing.T) {
 	b = New(5)
 	BufferAtTester(t, b)
 
-	b = NewFile(5)
+	file, err := ioutil.TempFile("", "buffer")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	defer os.Remove(file.Name())
+	defer file.Close()
+
+	b = NewFile(5, file)
 	BufferAtTester(t, b)
 
 }
@@ -62,7 +68,7 @@ func Compare(t *testing.T, b BufferAt, s string) {
 
 // TODO Rebuild Spill Tests
 
-/**/
+/** TODO Rebuild marshalling
 func TestGob(t *testing.T) {
 	str := "HelloWorld"
 	buf := NewUnboundedBuffer(2, 2)
@@ -117,12 +123,19 @@ func TestWrap(t *testing.T) {
 }
 
 func TestFile(t *testing.T) {
-	buf := NewFile(1024)
+	file, err := ioutil.TempFile("", "buffer")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	defer os.Remove(file.Name())
+	defer file.Close()
+
+	buf := NewFile(1024, file)
 	checkCap(t, buf, 1024)
 	runPerfectSeries(t, buf)
 	buf.Reset()
 
-	buf = NewFile(3)
+	buf = NewFile(3, file)
 	buf.Write([]byte("abc"))
 	buf.Read(make([]byte, 1))
 	buf.Write([]byte("a"))
@@ -140,14 +153,21 @@ func TestMem(t *testing.T) {
 }
 
 func TestFilePartition(t *testing.T) {
-	buf := NewPartition(func() Buffer { return NewFile(1024) })
+	buf := NewPartition(func() Buffer { return New(1024) })
 	checkCap(t, buf, MAXINT64)
 	runPerfectSeries(t, buf)
 	buf.Reset()
 }
 
 func TestMulti(t *testing.T) {
-	buf := NewMulti(New(5), New(5), NewFile(500), NewPartition(func() Buffer { return New(1024) }))
+	file, err := ioutil.TempFile("", "buffer")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	defer os.Remove(file.Name())
+	defer file.Close()
+
+	buf := NewMulti(New(5), New(5), NewFile(500, file), NewPartition(func() Buffer { return New(1024) }))
 	checkCap(t, buf, MAXINT64)
 	runPerfectSeries(t, buf)
 	isPerfectMatch(t, buf, 1024*1024)

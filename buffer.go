@@ -35,8 +35,3 @@ func Full(buf Buffer) bool {
 func Empty(l Buffer) bool {
 	return l.Len() == 0
 }
-
-func NewUnboundedBuffer(mem, chunk int64) Buffer {
-	return NewMulti(New(mem),
-		NewPartition(func() Buffer { return NewFile(chunk) }))
-}
