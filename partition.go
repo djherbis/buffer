@@ -10,7 +10,7 @@ type partition struct {
 	BufferPool
 }
 
-func NewPartition(pool BufferPool, buffers ...Buffer) *partition {
+func NewPartition(pool BufferPool, buffers ...Buffer) Buffer {
 	return &partition{
 		BufferPool: pool,
 		BufferList: buffers,
