@@ -1,6 +1,11 @@
 language: go
 go:
-  - tip
+  - 1.4
 
 script:
   - go test -v ./...
+
+notifications:
+  email:
+    on_success: never
+    on_failure: change
