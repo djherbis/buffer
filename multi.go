@@ -12,6 +12,7 @@ type chain struct {
 	HasNext bool
 }
 
+// NewMulti returns a Buffer which is the logical concatenation of the passed buffers.
 func NewMulti(buffers ...Buffer) Buffer {
 	if len(buffers) == 0 {
 		return nil

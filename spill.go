@@ -10,6 +10,8 @@ type spill struct {
 	Spiller io.Writer
 }
 
+// NewSpill returns a Buffer which writes data to w when there's an error
+// writing to buf. Such as when buf is full, or the disk is full, etc.
 func NewSpill(buf Buffer, w io.Writer) Buffer {
 	return &spill{
 		Buffer:  buf,

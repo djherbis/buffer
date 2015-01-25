@@ -13,6 +13,8 @@ type ring struct {
 	*wrapio.WrapWriter
 }
 
+// NewRing returns a Ring Buffer from a BufferAt.
+// It overwrites old data in the Buffer when needed (when its full).
 func NewRing(buffer BufferAt) Buffer {
 	return &ring{
 		BufferAt:   buffer,

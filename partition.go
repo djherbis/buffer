@@ -10,6 +10,9 @@ type partition struct {
 	Pool
 }
 
+// NewPartition returns a Buffer which uses a Pool to extend-shrink its size as needed.
+// It automatically allocates new buffers with pool.Get() to extend is length, and
+// pool.Put() to release unused buffers as it shrinks.
 func NewPartition(pool Pool, buffers ...Buffer) Buffer {
 	return &partition{
 		Pool:       pool,
