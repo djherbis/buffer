@@ -7,12 +7,12 @@ import (
 
 type partition struct {
 	BufferList
-	BufferPool
+	Pool
 }
 
-func NewPartition(pool BufferPool, buffers ...Buffer) Buffer {
+func NewPartition(pool Pool, buffers ...Buffer) Buffer {
 	return &partition{
-		BufferPool: pool,
+		Pool:       pool,
 		BufferList: buffers,
 	}
 }
@@ -31,7 +31,7 @@ func (buf *partition) Read(p []byte) (n int, err error) {
 		buffer := buf.BufferList[0]
 
 		if Empty(buffer) {
-			buf.BufferPool.Put(buf.Pop())
+			buf.Pool.Put(buf.Pop())
 			continue
 		}
 
@@ -51,13 +51,13 @@ func (buf *partition) Write(p []byte) (n int, err error) {
 	for len(p) > 0 {
 
 		if len(buf.BufferList) == 0 {
-			buf.Push(buf.BufferPool.Get())
+			buf.Push(buf.Pool.Get())
 		}
 
 		buffer := buf.BufferList[len(buf.BufferList)-1]
 
 		if Full(buffer) {
-			buf.Push(buf.BufferPool.Get())
+			buf.Push(buf.Pool.Get())
 			continue
 		}
 
@@ -77,7 +77,7 @@ func (buf *partition) Write(p []byte) (n int, err error) {
 
 func (buf *partition) Reset() {
 	for len(buf.BufferList) > 0 {
-		buf.BufferPool.Put(buf.Pop())
+		buf.Pool.Put(buf.Pop())
 	}
 }
 

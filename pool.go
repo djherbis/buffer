@@ -7,17 +7,17 @@ import (
 	"sync"
 )
 
-type BufferPool interface {
+type Pool interface {
 	Get() Buffer
 	Put(buf Buffer)
 }
 
-type Pool struct {
+type pool struct {
 	pool sync.Pool
 }
 
-func NewPool(New func() Buffer) *Pool {
-	return &Pool{
+func NewPool(New func() Buffer) Pool {
+	return &pool{
 		pool: sync.Pool{
 			New: func() interface{} {
 				return New()
@@ -26,11 +26,11 @@ func NewPool(New func() Buffer) *Pool {
 	}
 }
 
-func (p *Pool) Get() Buffer {
+func (p *pool) Get() Buffer {
 	return p.pool.Get().(Buffer)
 }
 
-func (p *Pool) Put(buf Buffer) {
+func (p *pool) Put(buf Buffer) {
 	buf.Reset()
 	p.pool.Put(buf)
 }
@@ -39,7 +39,7 @@ type memPool struct {
 	N int64
 }
 
-func NewMemPool(N int64) BufferPool {
+func NewMemPool(N int64) Pool {
 	return &memPool{N: N}
 }
 
@@ -51,7 +51,7 @@ type filePool struct {
 	Directory string
 }
 
-func NewFilePool(N int64, dir string) BufferPool {
+func NewFilePool(N int64, dir string) Pool {
 	return &filePool{N: N, Directory: dir}
 }
 
