@@ -47,15 +47,16 @@ func (p *memPool) Get() Buffer    { return New(p.N) }
 func (p *memPool) Put(buf Buffer) {}
 
 type filePool struct {
-	N int64
+	N         int64
+	Directory string
 }
 
-func NewFilePool(N int64) *filePool {
-	return &filePool{N: N}
+func NewFilePool(N int64, dir string) *filePool {
+	return &filePool{N: N, Directory: dir}
 }
 
 func (p *filePool) Get() Buffer {
-	file, err := ioutil.TempFile("", "buffer")
+	file, err := ioutil.TempFile(p.Directory, "buffer")
 	if err != nil {
 		panic(err.Error())
 	}

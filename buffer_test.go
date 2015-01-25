@@ -73,7 +73,7 @@ func Compare(t *testing.T, b BufferAt, s string) {
 func TestGob(t *testing.T) {
 	str := "HelloWorld"
 
-	buf := NewPartition(NewFilePool(20))
+	buf := NewPartition(NewFilePool(2, ""))
 	buf.Write([]byte(str))
 	b := bytes.NewBuffer(nil)
 	var test Buffer = buf
@@ -155,7 +155,7 @@ func TestMem(t *testing.T) {
 }
 
 func TestFilePartition(t *testing.T) {
-	buf := NewPartition(NewFilePool(1024))
+	buf := NewPartition(NewFilePool(1024, ""))
 	checkCap(t, buf, MAXINT64)
 	runPerfectSeries(t, buf)
 	buf.Reset()
@@ -169,7 +169,7 @@ func TestMulti(t *testing.T) {
 	defer os.Remove(file.Name())
 	defer file.Close()
 
-	buf := NewMulti(New(5), New(5), NewFile(500, file), NewPartition(NewFilePool(1024)))
+	buf := NewMulti(New(5), New(5), NewFile(500, file), NewPartition(NewFilePool(1024, "")))
 	checkCap(t, buf, MAXINT64)
 	runPerfectSeries(t, buf)
 	isPerfectMatch(t, buf, 1024*1024)
