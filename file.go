@@ -6,7 +6,6 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"sync"
 
 	"github.com/djherbis/buffer/wrapio"
@@ -70,7 +69,6 @@ func (buf *File) init() (err error) {
 		buf.file = file
 		buf.Filename = file.Name()
 		buf.Wrapper.SetReadWriterAt(file)
-		tracker.Track(file.Name())
 	}
 
 	return nil
@@ -112,7 +110,6 @@ func (buf *File) Reset() {
 	if buf.file != nil {
 		buf.file.Close()
 		os.Remove(buf.file.Name())
-		tracker.Untrack(buf.Filename)
 		buf.file = nil
 		buf.Filename = ""
 		buf.Wrapper.L = 0
@@ -120,17 +117,7 @@ func (buf *File) Reset() {
 	}
 }
 
-func Clean(path string) {
-	if filenames, err := filepath.Glob(filepath.Join(path, "buffer*")); err == nil {
-		for _, filename := range filenames {
-			if !tracker.IsTracked(filename) {
-				os.Remove(filename)
-			}
-		}
-	}
-}
-
-func (buf *File) GobEncode() ([]byte, error) {
+func (buf *File) MarshalBinary() ([]byte, error) {
 	w := bytes.NewBuffer(nil)
 	enc := gob.NewEncoder(w)
 	enc.Encode(&buf.Filename)
@@ -139,7 +126,7 @@ func (buf *File) GobEncode() ([]byte, error) {
 	return w.Bytes(), nil
 }
 
-func (buf *File) GobDecode(data []byte) (err error) {
+func (buf *File) UnmarshalBinary(data []byte) (err error) {
 	r := bytes.NewBuffer(data)
 	dec := gob.NewDecoder(r)
 	dec.Decode(&buf.Filename)

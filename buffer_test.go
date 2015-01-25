@@ -12,14 +12,6 @@ import (
 	"github.com/djherbis/buffer/wrapio"
 )
 
-func BenchmarkSlice(b *testing.B) {
-	buf := NewBytes(32 * 1024)
-	for i := 0; i < b.N; i++ {
-		io.Copy(buf, io.LimitReader(rand.Reader, 32*1024))
-		io.Copy(ioutil.Discard, buf)
-	}
-}
-
 func BenchmarkMemory(b *testing.B) {
 	buf := New(32 * 1024)
 	for i := 0; i < b.N; i++ {
@@ -29,9 +21,7 @@ func BenchmarkMemory(b *testing.B) {
 }
 
 func TestWriteAt(t *testing.T) {
-
-	b := NewBytes(5)
-	BufferAtTester(t, b)
+	var b BufferAt
 
 	b = New(5)
 	BufferAtTester(t, b)
@@ -83,7 +73,6 @@ func TestGob(t *testing.T) {
 		t.Error(err.Error())
 		return
 	}
-	Clean(DataDir())
 	var buffer Buffer
 	if err := gob.NewDecoder(b).Decode(&buffer); err != nil {
 		t.Error(err.Error())
