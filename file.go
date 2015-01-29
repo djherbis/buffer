@@ -28,7 +28,7 @@ type fileBuffer struct {
 func NewFile(N int64, file File) BufferAt {
 	return &fileBuffer{
 		file:    file,
-		Wrapper: wrapio.NewWrapper(file, N),
+		Wrapper: wrapio.NewWrapper(file, 0, 0, N),
 	}
 }
 
@@ -63,8 +63,6 @@ func (buf *fileBuffer) UnmarshalBinary(data []byte) error {
 	buf.file = file
 
 	_, err = fmt.Fscanln(buffer, &N, &L, &O)
-	buf.Wrapper = wrapio.NewWrapper(file, N)
-	buf.Wrapper.L = L
-	buf.Wrapper.O = O
+	buf.Wrapper = wrapio.NewWrapper(file, L, O, N)
 	return nil
 }

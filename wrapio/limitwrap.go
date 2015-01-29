@@ -19,8 +19,10 @@ type Wrapper struct {
 	rwa ReadWriterAt
 }
 
-func NewWrapper(rwa ReadWriterAt, N int64) *Wrapper {
+func NewWrapper(rwa ReadWriterAt, L, O, N int64) *Wrapper {
 	return &Wrapper{
+		L:   L,
+		O:   O,
 		N:   N,
 		rwa: rwa,
 	}
@@ -51,7 +53,6 @@ func (wpr *Wrapper) Read(p []byte) (n int, err error) {
 	return n, err
 }
 
-// BUG(Dustin): Handle if off is too far / len(p) too big
 func (wpr *Wrapper) ReadAt(p []byte, off int64) (n int, err error) {
 	wrap := NewWrapReader(wpr.rwa, wpr.O+off, wpr.N)
 	r := io.LimitReader(wrap, wpr.L-off)
@@ -62,7 +63,6 @@ func (wpr *Wrapper) Write(p []byte) (n int, err error) {
 	return wpr.WriteAt(p, wpr.L)
 }
 
-// BUG(Dustin): Handle if off is too far / len(p) too big
 func (wpr *Wrapper) WriteAt(p []byte, off int64) (n int, err error) {
 	wrap := NewWrapWriter(wpr.rwa, wpr.O+off, wpr.N)
 	w := limio.LimitWriter(wrap, wpr.N-off)
