@@ -18,6 +18,21 @@ func BenchmarkMemory(b *testing.B) {
 	}
 }
 
+func TestOverflow(t *testing.T) {
+	buf := NewMulti(New(5), NewDiscard())
+	buf.Write([]byte("Hello World"))
+
+	data, err := ioutil.ReadAll(buf)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	if !bytes.Equal(data, []byte("Hello")) {
+		t.Errorf("Expected Hello got %s", string(data))
+	}
+
+}
+
 func TestWriteAt(t *testing.T) {
 	var b BufferAt
 
