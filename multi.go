@@ -90,7 +90,7 @@ func (buf *chain) Read(p []byte) (n int, err error) {
 }
 
 func (buf *chain) Write(p []byte) (n int, err error) {
-	if n, err = buf.Buf.Write(p); err == io.ErrShortBuffer && buf.HasNext {
+	if n, err = buf.Buf.Write(p); err == io.ErrShortWrite && buf.HasNext {
 		err = nil
 	}
 	p = p[n:]

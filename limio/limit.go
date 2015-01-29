@@ -9,7 +9,7 @@ type LimitedWriter struct {
 
 func (l *LimitedWriter) Write(p []byte) (n int, err error) {
 	if l.N <= 0 {
-		return 0, io.ErrShortBuffer
+		return 0, io.ErrShortWrite
 	}
 	if int64(len(p)) > l.N {
 		p = p[0:l.N]

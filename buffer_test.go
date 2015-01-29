@@ -8,8 +8,6 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
-
-	"github.com/djherbis/buffer/wrapio"
 )
 
 func BenchmarkMemory(b *testing.B) {
@@ -105,22 +103,6 @@ func TestSpill(t *testing.T) {
 	n, _ := buf.Read(data)
 	if !bytes.Equal(data[:n], []byte("Hello")) {
 		t.Error("ReadAt Failed. " + string(data[:n]))
-	}
-}
-
-func TestWrap(t *testing.T) {
-	if file, err := ioutil.TempFile("", "wrap.test"); err == nil {
-		w := wrapio.NewWrapWriter(file, 0, 3)
-		w.Write([]byte("abcdef"))
-
-		r := wrapio.NewWrapReader(file, 0, 2)
-		data := make([]byte, 6)
-		r.Read(data)
-		if !bytes.Equal(data, []byte("dedede")) {
-			t.Error("Wrapper error!")
-		}
-		file.Close()
-		os.Remove(file.Name())
 	}
 }
 
