@@ -1,4 +1,4 @@
-// buffer implements a series of Buffers which can be composed to implment complicated buffering strategies
+// buffer implements a series of Buffers which can be composed to implement complicated buffering strategies
 package buffer
 
 import (
