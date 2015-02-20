@@ -19,7 +19,7 @@ func BenchmarkMemory(b *testing.B) {
 }
 
 func TestPool(t *testing.T) {
-	pool := NewPool(func() Buffer { New(10) })
+	pool := NewPool(func() Buffer { return New(10) })
 	buf := pool.Get()
 	buf.Write([]byte("hello world"))
 	pool.Put(buf)
