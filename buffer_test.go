@@ -204,6 +204,26 @@ func TestList(t *testing.T) {
 	}
 }
 
+func TestList2(t *testing.T) {
+	mem := New(10)
+	ory := New(10)
+	mem.Write([]byte("Hello"))
+	ory.Write([]byte("world"))
+
+	buf := BufferList([]Buffer{mem, ory})
+	if buf.Len() != 10 {
+		t.Errorf("incorrect sum of lengths")
+	}
+	if buf.Cap() != 20 {
+		t.Errorf("incorrect sum of caps")
+	}
+
+	buf.Reset()
+	if buf.Len() != 0 {
+		t.Errorf("buffer should be empty")
+	}
+}
+
 func TestSpill(t *testing.T) {
 	buf := NewSpill(New(5), NewDiscard())
 	buf.Write([]byte("Hello World"))
