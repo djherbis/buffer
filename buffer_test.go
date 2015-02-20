@@ -119,9 +119,6 @@ func TestRing(t *testing.T) {
 	}
 }
 
-// TODO Rebuild Spill Tests
-
-/**/
 func TestGob(t *testing.T) {
 	str := "HelloWorld"
 
@@ -148,7 +145,16 @@ func TestGob(t *testing.T) {
 	buffer.Reset()
 }
 
-/**/
+func TestDiscard(t *testing.T) {
+	buf := NewDiscard()
+	if buf.Cap() != MAXINT64 {
+		t.Errorf("cap isn't infinite")
+	}
+	buf.Write([]byte("hello"))
+	if buf.Len() != 0 {
+		t.Errorf("buf should always be empty")
+	}
+}
 
 func TestSpill(t *testing.T) {
 	buf := NewMulti(New(5), NewDiscard())

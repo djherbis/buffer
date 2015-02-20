@@ -27,15 +27,7 @@ func (buf *discard) Read(p []byte) (n int, err error) {
 	return 0, io.EOF
 }
 
-func (buf *discard) ReadAt(p []byte, off int64) (n int, err error) {
-	return 0, io.EOF
-}
-
 func (buf *discard) Write(p []byte) (int, error) {
-	return ioutil.Discard.Write(p)
-}
-
-func (buf *discard) WriteAt(p []byte, off int64) (int, error) {
 	return ioutil.Discard.Write(p)
 }
 
