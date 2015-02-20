@@ -186,6 +186,21 @@ func TestSpill(t *testing.T) {
 	}
 }
 
+func TestSpill2(t *testing.T) {
+	buf := NewSpill(New(5), nil)
+
+	if buf.Cap() != MAXINT64 {
+		t.Errorf("cap isn't infinite")
+	}
+
+	buf.Write([]byte("Hello World"))
+	data := make([]byte, 12)
+	n, _ := buf.Read(data)
+	if !bytes.Equal(data[:n], []byte("Hello")) {
+		t.Error("ReadAt Failed. " + string(data[:n]))
+	}
+}
+
 func TestFile(t *testing.T) {
 	file, err := ioutil.TempFile("", "buffer")
 	if err != nil {
