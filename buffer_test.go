@@ -289,6 +289,20 @@ func TestFilePartition(t *testing.T) {
 	buf.Reset()
 }
 
+func TestSmallMulti(t *testing.T) {
+	if empty := NewMulti(); empty != nil {
+		t.Errorf("the empty buffer should return nil")
+	}
+
+	one := NewMulti(New(10))
+	if one.Len() != 0 {
+		t.Errorf("singleton multi doesn't match inner buffer len")
+	}
+	if one.Cap() != 10 {
+		t.Errorf("singleton multi doesn't match inner buffer cap")
+	}
+}
+
 func TestMulti(t *testing.T) {
 	file, err := ioutil.TempFile("", "buffer")
 	if err != nil {
