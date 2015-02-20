@@ -78,7 +78,46 @@ func Compare(t *testing.T, b BufferAt, s string) {
 	}
 }
 
-// TODO Rebuild Ring Tests
+func TestRing(t *testing.T) {
+	ring := NewRing(New(3))
+	if ring.Len() != 0 {
+		t.Errorf("Ring non-empty start!")
+	}
+
+	if ring.Cap() != MAXINT64 {
+		t.Errorf("Ring has < max capacity")
+	}
+
+	ring.Write([]byte("abc"))
+	if ring.Len() != 3 {
+		t.Errorf("expected ring len == 3")
+	}
+
+	ring.Write([]byte("de"))
+	if ring.Len() != 3 {
+		t.Errorf("expected riing len == 3")
+	}
+
+	data := make([]byte, 12)
+	if n, err := ring.Read(data); err != nil {
+		t.Error(err.Error())
+	} else {
+		if !bytes.Equal(data[:n], []byte("cde")) {
+			t.Errorf("expected cde, got %s", data[:n])
+		}
+	}
+
+	if ring.Len() != 0 {
+		t.Errorf("ring should now be empty")
+	}
+
+	ring.Write([]byte("hello"))
+	ring.Reset()
+
+	if ring.Len() != 0 {
+		t.Errorf("ring should still be empty")
+	}
+}
 
 // TODO Rebuild Spill Tests
 
