@@ -257,6 +257,9 @@ func TestMem(t *testing.T) {
 	checkCap(t, buf, 1024)
 	runPerfectSeries(t, buf)
 	buf.Reset()
+	if n, err := buf.WriteAt([]byte("hello"), 1); err == nil || n != 0 {
+		t.Errorf("write should have failed")
+	}
 }
 
 func TestFilePartition(t *testing.T) {
