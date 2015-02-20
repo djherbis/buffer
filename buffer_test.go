@@ -284,6 +284,21 @@ func TestMulti(t *testing.T) {
 	buf.Reset()
 }
 
+func TestMulti2(t *testing.T) {
+	file, err := ioutil.TempFile("", "buffer")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	defer os.Remove(file.Name())
+	defer file.Close()
+
+	buf := NewMulti(New(5), New(5), NewFile(500, file))
+	checkCap(t, buf, 510)
+	runPerfectSeries(t, buf)
+	isPerfectMatch(t, buf, 1024*1024)
+	buf.Reset()
+}
+
 func runPerfectSeries(t *testing.T, buf Buffer) {
 	checkEmpty(t, buf)
 	simple(t, buf)
