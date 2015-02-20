@@ -13,8 +13,12 @@ func (l *LimitedWriter) Write(p []byte) (n int, err error) {
 	}
 	if int64(len(p)) > l.N {
 		p = p[0:l.N]
+		err = io.ErrShortWrite
 	}
-	n, err = l.W.Write(p)
+	n, er := l.W.Write(p)
+	if er != nil {
+		err = er
+	}
 	l.N -= int64(n)
 	return n, err
 }

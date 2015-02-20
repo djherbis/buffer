@@ -18,6 +18,34 @@ func BenchmarkMemory(b *testing.B) {
 	}
 }
 
+func TestPool(t *testing.T) {
+	pool := NewPool(func() Buffer { New(10) })
+	buf := pool.Get()
+	buf.Write([]byte("hello world"))
+	pool.Put(buf)
+}
+
+func TestMemPool(t *testing.T) {
+	pool := NewMemPool(10)
+	buf := pool.Get()
+	if n, err := buf.Write([]byte("hello world")); n != 10 {
+		t.Errorf("wrote incorrect amount")
+	} else if err == nil {
+		t.Errorf("should have been a shortwrite error here")
+	}
+}
+
+func TestFilePool(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("there should have been a panic here!")
+		}
+	}()
+
+	pool := NewFilePool(1024, "::~_bad_dir_~::")
+	pool.Get()
+}
+
 func TestOverflow(t *testing.T) {
 	buf := NewMulti(New(5), NewDiscard())
 	buf.Write([]byte("Hello World"))
