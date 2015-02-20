@@ -157,7 +157,7 @@ func TestDiscard(t *testing.T) {
 }
 
 func TestSpill(t *testing.T) {
-	buf := NewMulti(New(5), NewDiscard())
+	buf := NewSpill(New(5), NewDiscard())
 	buf.Write([]byte("Hello World"))
 	data := make([]byte, 12)
 	n, _ := buf.Read(data)
