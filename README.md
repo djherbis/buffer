@@ -4,7 +4,7 @@ Buffer [![GoDoc](https://godoc.org/github.com/djherbis/buffer?status.svg)](https
 Usage
 ------------
 
-The following buffers provide simple unique behviours which when composed can create complex buffering strategies. For use with github.com/djherbis/nio for Buffered io.Pipe and io.Copy implementations.
+The following buffers provide simple unique behaviours which when composed can create complex buffering strategies. For use with github.com/djherbis/nio for Buffered io.Pipe and io.Copy implementations.
 
 For example: 
 
