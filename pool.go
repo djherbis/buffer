@@ -41,16 +41,25 @@ func (p *pool) Put(buf Buffer) {
 
 type memPool struct {
 	N int64
+	Pool
 }
 
 // NewMemPool returns a Pool, Get() returns an in memory buffer of max size N.
-// Put() is a nop.
+// Put() returns the buffer to the pool after resetting it.
 func NewMemPool(N int64) Pool {
-	return &memPool{N: N}
+	return &memPool{
+		N: N,
+		Pool: NewPool(func() Buffer {
+			return New(N)
+		}),
+	}
 }
 
-func (p *memPool) Get() Buffer    { return New(p.N) }
-func (p *memPool) Put(buf Buffer) {}
+func (p *memPool) Get() Buffer { return p.Pool.Get().(Buffer) }
+func (p *memPool) Put(buf Buffer) {
+	buf.Reset()
+	p.Pool.Put(buf)
+}
 
 type filePool struct {
 	N         int64
@@ -72,6 +81,7 @@ func (p *filePool) Get() Buffer {
 }
 
 func (p *filePool) Put(buf Buffer) {
+	buf.Reset()
 	if fileBuf, ok := buf.(*fileBuffer); ok {
 		fileBuf.file.Close()
 		os.Remove(fileBuf.file.Name())
