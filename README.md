@@ -1,5 +1,10 @@
-Buffer [![GoDoc](https://godoc.org/github.com/djherbis/buffer?status.svg)](https://godoc.org/github.com/djherbis/buffer) [![Build Status](https://travis-ci.org/djherbis/buffer.svg?branch=master)](https://travis-ci.org/djherbis/buffer) [![Coverage Status](https://coveralls.io/repos/djherbis/buffer/badge.svg?branch=master)](https://coveralls.io/r/djherbis/buffer?branch=master)
+Buffer 
 ==========
+
+[![GoDoc](https://godoc.org/github.com/djherbis/buffer?status.svg)](https://godoc.org/github.com/djherbis/buffer)
+[![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE.txt)
+[![Build Status](https://travis-ci.org/djherbis/buffer.svg?branch=master)](https://travis-ci.org/djherbis/buffer) 
+[![Coverage Status](https://coveralls.io/repos/djherbis/buffer/badge.svg?branch=master)](https://coveralls.io/r/djherbis/buffer?branch=master)
 
 Usage
 ------------
