@@ -11,6 +11,7 @@ import (
 	"github.com/djherbis/buffer/wrapio"
 )
 
+// File is used as the backing resource for a the NewFile BufferAt.
 type File interface {
 	Name() string
 	Stat() (fi os.FileInfo, err error)
