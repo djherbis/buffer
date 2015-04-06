@@ -43,9 +43,8 @@ func (buf *chain) Cap() (n int64) {
 		Next := buf.Next.Cap()
 		if buf.Buf.Cap() > MAXINT64-Next {
 			return MAXINT64
-		} else {
-			return buf.Buf.Cap() + Next
 		}
+		return buf.Buf.Cap() + Next
 	}
 
 	return buf.Buf.Cap()
@@ -56,9 +55,8 @@ func (buf *chain) Len() (n int64) {
 		Next := buf.Next.Len()
 		if buf.Buf.Len() > MAXINT64-Next {
 			return MAXINT64
-		} else {
-			return buf.Buf.Len() + Next
 		}
+		return buf.Buf.Len() + Next
 	}
 
 	return buf.Buf.Len()
