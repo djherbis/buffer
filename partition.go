@@ -6,7 +6,7 @@ import (
 )
 
 type partition struct {
-	BufferList
+	List
 	Pool
 }
 
@@ -15,8 +15,8 @@ type partition struct {
 // pool.Put() to release unused buffers as it shrinks.
 func NewPartition(pool Pool, buffers ...Buffer) Buffer {
 	return &partition{
-		Pool:       pool,
-		BufferList: buffers,
+		Pool: pool,
+		List: buffers,
 	}
 }
 
@@ -27,11 +27,11 @@ func (buf *partition) Cap() int64 {
 func (buf *partition) Read(p []byte) (n int, err error) {
 	for len(p) > 0 {
 
-		if len(buf.BufferList) == 0 {
+		if len(buf.List) == 0 {
 			return n, io.EOF
 		}
 
-		buffer := buf.BufferList[0]
+		buffer := buf.List[0]
 
 		if Empty(buffer) {
 			buf.Pool.Put(buf.Pop())
@@ -53,11 +53,11 @@ func (buf *partition) Read(p []byte) (n int, err error) {
 func (buf *partition) Write(p []byte) (n int, err error) {
 	for len(p) > 0 {
 
-		if len(buf.BufferList) == 0 {
+		if len(buf.List) == 0 {
 			buf.Push(buf.Pool.Get())
 		}
 
-		buffer := buf.BufferList[len(buf.BufferList)-1]
+		buffer := buf.List[len(buf.List)-1]
 
 		if Full(buffer) {
 			buf.Push(buf.Pool.Get())
@@ -79,7 +79,7 @@ func (buf *partition) Write(p []byte) (n int, err error) {
 }
 
 func (buf *partition) Reset() {
-	for len(buf.BufferList) > 0 {
+	for len(buf.List) > 0 {
 		buf.Pool.Put(buf.Pop())
 	}
 }

@@ -189,7 +189,7 @@ func TestList(t *testing.T) {
 	mem.Write([]byte("Hello"))
 	ory.Write([]byte("world"))
 
-	buf := BufferList([]Buffer{mem, ory, NewDiscard()})
+	buf := List([]Buffer{mem, ory, NewDiscard()})
 	if buf.Len() != 10 {
 		t.Errorf("incorrect sum of lengths")
 	}
@@ -209,7 +209,7 @@ func TestList2(t *testing.T) {
 	mem.Write([]byte("Hello"))
 	ory.Write([]byte("world"))
 
-	buf := BufferList([]Buffer{mem, ory})
+	buf := List([]Buffer{mem, ory})
 	if buf.Len() != 10 {
 		t.Errorf("incorrect sum of lengths")
 	}
