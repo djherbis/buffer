@@ -153,8 +153,7 @@ func TestGob(t *testing.T) {
 	buf := NewUnboundedBuffer(2, 2)
 	buf.Write([]byte(str))
 	b := bytes.NewBuffer(nil)
-	var test Buffer = buf
-	if err := gob.NewEncoder(b).Encode(&test); err != nil {
+	if err := gob.NewEncoder(b).Encode(&buf); err != nil {
 		t.Error(err.Error())
 		return
 	}
