@@ -29,9 +29,8 @@ func (buf *spill) Cap() int64 {
 
 func (buf *spill) Write(p []byte) (n int, err error) {
 	if n, err = buf.Buffer.Write(p); err != nil {
-		if n, err := buf.Spiller.Write(p[:n]); err != nil {
-			return n, err
-		}
+		m, err := buf.Spiller.Write(p[n:])
+		return m + n, err
 	}
 	return len(p), nil
 }

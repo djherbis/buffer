@@ -244,11 +244,25 @@ func TestSpill2(t *testing.T) {
 		t.Errorf("cap isn't infinite")
 	}
 
-	buf.Write([]byte("Hello World"))
+	towrite := []byte("Hello World")
+	m, _ := buf.Write(towrite)
+	if m != len(towrite) {
+		t.Errorf("failed to write all data: %d != %d", m, len(towrite))
+	}
 	data := make([]byte, 12)
 	n, _ := buf.Read(data)
 	if !bytes.Equal(data[:n], []byte("Hello")) {
-		t.Error("ReadAt Failed. " + string(data[:n]))
+		t.Error("Read Failed. " + string(data[:n]))
+	}
+}
+
+func TestNoSpill(t *testing.T) {
+	buf := NewSpill(New(1024), nil)
+	buf.Write([]byte("Hello World"))
+	data := make([]byte, 12)
+	n, _ := buf.Read(data)
+	if !bytes.Equal(data[:n], []byte("Hello World")) {
+		t.Error("Read Failed. " + string(data[:n]))
 	}
 }
 
