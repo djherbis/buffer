@@ -12,6 +12,8 @@ type chain struct {
 }
 
 // NewMulti returns a Buffer which is the logical concatenation of the passed buffers.
+// The data in the buffers is shifted such that there is no non-empty buffer following
+// a non-full buffer, this process is also run after every Read.
 // If no buffers are passed, the returned Buffer is nil.
 func NewMulti(buffers ...Buffer) Buffer {
 	if len(buffers) == 0 {
