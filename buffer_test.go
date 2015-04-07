@@ -33,6 +33,10 @@ func TestMemPool(t *testing.T) {
 	} else if err == nil {
 		t.Errorf("should have been a shortwrite error here")
 	}
+	pool.Put(buf)
+	if buf.Len() > 0 {
+		t.Errorf("should have emptied the buffer")
+	}
 }
 
 func TestFilePool(t *testing.T) {
@@ -393,5 +397,32 @@ func checkEmpty(t *testing.T, buf Buffer) {
 func checkCap(t *testing.T, buf Buffer, correctCap int64) {
 	if buf.Cap() != correctCap {
 		t.Error("Buffer cap is incorrect", buf.Cap(), correctCap)
+	}
+}
+
+type badBuffer struct{}
+
+func (b badBuffer) Len() int64 { return 1024 }
+
+func (b badBuffer) Cap() int64 { return 10 * 1024 }
+
+func (b badBuffer) Read(p []byte) (int, error) { return 0, io.ErrUnexpectedEOF }
+
+func (b badBuffer) Write(p []byte) (int, error) { return 0, io.ErrShortBuffer }
+
+func (b badBuffer) Reset() {}
+
+func TestBadPartition(t *testing.T) {
+	p := NewPool(func() Buffer { return badBuffer{} })
+	buf := NewPartition(p)
+	_, err := buf.Write([]byte("bad write"))
+	if err != io.ErrShortBuffer {
+		t.Errorf("wrong read error was returned! %v", err)
+	}
+
+	b := make([]byte, 1024)
+	_, err = buf.Read(b)
+	if err != io.ErrUnexpectedEOF {
+		t.Errorf("wrong write error was returned! %v", err)
 	}
 }
