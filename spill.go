@@ -4,6 +4,7 @@ import (
 	"encoding/gob"
 	"io"
 	"io/ioutil"
+	"math"
 )
 
 type spill struct {
@@ -24,7 +25,7 @@ func NewSpill(buf Buffer, w io.Writer) Buffer {
 }
 
 func (buf *spill) Cap() int64 {
-	return MAXINT64
+	return math.MaxInt64
 }
 
 func (buf *spill) Write(p []byte) (n int, err error) {

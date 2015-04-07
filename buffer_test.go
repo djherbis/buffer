@@ -6,6 +6,7 @@ import (
 	"encoding/gob"
 	"io"
 	"io/ioutil"
+	"math"
 	"os"
 	"testing"
 )
@@ -116,7 +117,7 @@ func TestRing(t *testing.T) {
 		t.Errorf("Ring non-empty start!")
 	}
 
-	if ring.Cap() != MAXINT64 {
+	if ring.Cap() != math.MaxInt64 {
 		t.Errorf("Ring has < max capacity")
 	}
 
@@ -178,7 +179,7 @@ func TestGob(t *testing.T) {
 
 func TestDiscard(t *testing.T) {
 	buf := NewDiscard()
-	if buf.Cap() != MAXINT64 {
+	if buf.Cap() != math.MaxInt64 {
 		t.Errorf("cap isn't infinite")
 	}
 	buf.Write([]byte("hello"))
@@ -197,7 +198,7 @@ func TestList(t *testing.T) {
 	if buf.Len() != 10 {
 		t.Errorf("incorrect sum of lengths")
 	}
-	if buf.Cap() != MAXINT64 {
+	if buf.Cap() != math.MaxInt64 {
 		t.Errorf("incorrect sum of caps")
 	}
 
@@ -240,7 +241,7 @@ func TestSpill(t *testing.T) {
 func TestSpill2(t *testing.T) {
 	buf := NewSpill(New(5), nil)
 
-	if buf.Cap() != MAXINT64 {
+	if buf.Cap() != math.MaxInt64 {
 		t.Errorf("cap isn't infinite")
 	}
 
@@ -301,7 +302,7 @@ func TestMem(t *testing.T) {
 
 func TestFilePartition(t *testing.T) {
 	buf := NewPartition(NewFilePool(1024, ""))
-	checkCap(t, buf, MAXINT64)
+	checkCap(t, buf, math.MaxInt64)
 	runPerfectSeries(t, buf)
 	buf.Reset()
 }
@@ -329,7 +330,7 @@ func TestMulti(t *testing.T) {
 	defer file.Close()
 
 	buf := NewMulti(New(5), New(5), NewFile(500, file), NewPartition(NewFilePool(1024, "")))
-	checkCap(t, buf, MAXINT64)
+	checkCap(t, buf, math.MaxInt64)
 	runPerfectSeries(t, buf)
 	isPerfectMatch(t, buf, 1024*1024)
 	buf.Reset()
@@ -416,9 +417,9 @@ func checkCap(t *testing.T, buf Buffer, correctCap int64) {
 
 type bigBuffer struct{}
 
-func (b bigBuffer) Len() int64 { return MAXINT64 }
+func (b bigBuffer) Len() int64 { return math.MaxInt64 }
 
-func (b bigBuffer) Cap() int64 { return MAXINT64 }
+func (b bigBuffer) Cap() int64 { return math.MaxInt64 }
 
 func (b bigBuffer) Read(p []byte) (int, error) { return 0, io.ErrUnexpectedEOF }
 
@@ -428,25 +429,25 @@ func (b bigBuffer) Reset() {}
 
 func TestBigList(t *testing.T) {
 	l := List([]Buffer{bigBuffer{}, bigBuffer{}})
-	if l.Len() != MAXINT64 {
+	if l.Len() != math.MaxInt64 {
 		t.Errorf("expected list to be max-size: %d", l.Len())
 	}
 }
 
 func TestBigMulti(t *testing.T) {
 	single := NewMulti(bigBuffer{})
-	if single.Len() != MAXINT64 {
+	if single.Len() != math.MaxInt64 {
 		t.Errorf("expected len to be max-size: %d", single.Len())
 	}
-	if single.Cap() != MAXINT64 {
+	if single.Cap() != math.MaxInt64 {
 		t.Errorf("expected cap to be max-size: %d", single.Cap())
 	}
 
 	buf := NewMulti(bigBuffer{}, bigBuffer{})
-	if buf.Len() != MAXINT64 {
+	if buf.Len() != math.MaxInt64 {
 		t.Errorf("expected len to be max-size: %d", buf.Len())
 	}
-	if buf.Cap() != MAXINT64 {
+	if buf.Cap() != math.MaxInt64 {
 		t.Errorf("expected cap to be max-size: %d", buf.Cap())
 	}
 

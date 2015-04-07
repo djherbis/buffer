@@ -2,6 +2,7 @@ package buffer
 
 import (
 	"io"
+	"math"
 
 	"github.com/djherbis/buffer/wrapio"
 )
@@ -28,7 +29,7 @@ func (buf *ring) Len() int64 {
 }
 
 func (buf *ring) Cap() int64 {
-	return MAXINT64
+	return math.MaxInt64
 }
 
 func (buf *ring) Read(p []byte) (n int, err error) {

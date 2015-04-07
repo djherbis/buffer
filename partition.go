@@ -3,6 +3,7 @@ package buffer
 import (
 	"encoding/gob"
 	"io"
+	"math"
 )
 
 type partition struct {
@@ -21,7 +22,7 @@ func NewPartition(pool Pool, buffers ...Buffer) Buffer {
 }
 
 func (buf *partition) Cap() int64 {
-	return MAXINT64
+	return math.MaxInt64
 }
 
 func (buf *partition) Read(p []byte) (n int, err error) {

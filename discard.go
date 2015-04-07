@@ -4,6 +4,7 @@ import (
 	"encoding/gob"
 	"io"
 	"io/ioutil"
+	"math"
 )
 
 type discard struct{}
@@ -18,7 +19,7 @@ func (buf *discard) Len() int64 {
 }
 
 func (buf *discard) Cap() int64 {
-	return MAXINT64
+	return math.MaxInt64
 }
 
 func (buf *discard) Reset() {}

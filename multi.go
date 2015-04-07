@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/gob"
 	"io"
+	"math"
 )
 
 type chain struct {
@@ -39,16 +40,16 @@ func (buf *chain) Reset() {
 
 func (buf *chain) Cap() (n int64) {
 	Next := buf.Next.Cap()
-	if buf.Buf.Cap() > MAXINT64-Next {
-		return MAXINT64
+	if buf.Buf.Cap() > math.MaxInt64-Next {
+		return math.MaxInt64
 	}
 	return buf.Buf.Cap() + Next
 }
 
 func (buf *chain) Len() (n int64) {
 	Next := buf.Next.Len()
-	if buf.Buf.Len() > MAXINT64-Next {
-		return MAXINT64
+	if buf.Buf.Len() > math.MaxInt64-Next {
+		return math.MaxInt64
 	}
 	return buf.Buf.Len() + Next
 }

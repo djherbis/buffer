@@ -1,13 +1,15 @@
 package buffer
 
+import "math"
+
 // List is a slice of Buffers, it's the backing for NewPartition
 type List []Buffer
 
 // Len is the sum of the Len()'s of the Buffers in the List.
 func (l *List) Len() (n int64) {
 	for _, buffer := range *l {
-		if n > MAXINT64-buffer.Len() {
-			return MAXINT64
+		if n > math.MaxInt64-buffer.Len() {
+			return math.MaxInt64
 		}
 		n += buffer.Len()
 	}
@@ -17,8 +19,8 @@ func (l *List) Len() (n int64) {
 // Cap is the sum of the Cap()'s of the Buffers in the List.
 func (l *List) Cap() (n int64) {
 	for _, buffer := range *l {
-		if n > MAXINT64-buffer.Cap() {
-			return MAXINT64
+		if n > math.MaxInt64-buffer.Cap() {
+			return math.MaxInt64
 		}
 		n += buffer.Cap()
 	}

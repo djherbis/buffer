@@ -6,11 +6,6 @@ import (
 	"os"
 )
 
-// MAXINT64 is the largest representable size of a Buffer.
-// Buffers which exceed this size (unlikely) will still report this as their size.
-// It is also the Cap() of unbounded buffers.
-const MAXINT64 = 9223372036854775807
-
 // Buffer is used to Write() data which will be Read() later.
 type Buffer interface {
 	Len() int64 // How much data is Buffered in bytes
