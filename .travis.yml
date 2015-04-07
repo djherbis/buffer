@@ -6,7 +6,9 @@ before_install:
   - go get github.com/mattn/goveralls
   - if ! go get code.google.com/p/go.tools/cmd/cover; then go get golang.org/x/tools/cmd/cover; fi
 script:
-    - $HOME/gopath/bin/goveralls -service=travis-ci -repotoken $COVERALLS_TOKEN
+    - '[ "${TRAVIS_PULL_REQUEST}" = "false" ] && $HOME/gopath/bin/goveralls -service=travis-ci -repotoken $COVERALLS_TOKEN || true'
+    - go vet
+    - go test -v ./...
 notifications:
   email:
     on_success: never
