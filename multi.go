@@ -7,12 +7,12 @@ import (
 )
 
 type chain struct {
-	Buf     Buffer
-	Next    Buffer
-	HasNext bool
+	Buf  Buffer
+	Next Buffer
 }
 
 // NewMulti returns a Buffer which is the logical concatenation of the passed buffers.
+// If no buffers are passed, the returned Buffer is nil.
 func NewMulti(buffers ...Buffer) Buffer {
 	if len(buffers) == 0 {
 		return nil
@@ -21,9 +21,8 @@ func NewMulti(buffers ...Buffer) Buffer {
 	}
 
 	buf := &chain{
-		Buf:     buffers[0],
-		Next:    NewMulti(buffers[1:]...),
-		HasNext: len(buffers[1:]) != 0,
+		Buf:  buffers[0],
+		Next: NewMulti(buffers[1:]...),
 	}
 
 	buf.Defrag()
@@ -32,38 +31,28 @@ func NewMulti(buffers ...Buffer) Buffer {
 }
 
 func (buf *chain) Reset() {
-	if buf.HasNext {
-		buf.Next.Reset()
-	}
+	buf.Next.Reset()
 	buf.Buf.Reset()
 }
 
 func (buf *chain) Cap() (n int64) {
-	if buf.HasNext {
-		Next := buf.Next.Cap()
-		if buf.Buf.Cap() > MAXINT64-Next {
-			return MAXINT64
-		}
-		return buf.Buf.Cap() + Next
+	Next := buf.Next.Cap()
+	if buf.Buf.Cap() > MAXINT64-Next {
+		return MAXINT64
 	}
-
-	return buf.Buf.Cap()
+	return buf.Buf.Cap() + Next
 }
 
 func (buf *chain) Len() (n int64) {
-	if buf.HasNext {
-		Next := buf.Next.Len()
-		if buf.Buf.Len() > MAXINT64-Next {
-			return MAXINT64
-		}
-		return buf.Buf.Len() + Next
+	Next := buf.Next.Len()
+	if buf.Buf.Len() > MAXINT64-Next {
+		return MAXINT64
 	}
-
-	return buf.Buf.Len()
+	return buf.Buf.Len() + Next
 }
 
 func (buf *chain) Defrag() {
-	for !Full(buf.Buf) && buf.HasNext && !Empty(buf.Next) {
+	for !Full(buf.Buf) && !Empty(buf.Next) {
 		r := io.LimitReader(buf.Next, Gap(buf.Buf))
 		if _, err := io.Copy(buf.Buf, r); err != nil && err != io.EOF {
 			return
@@ -74,7 +63,7 @@ func (buf *chain) Defrag() {
 func (buf *chain) Read(p []byte) (n int, err error) {
 	n, err = buf.Buf.Read(p)
 	p = p[n:]
-	if len(p) > 0 && buf.HasNext && (err == nil || err == io.EOF) {
+	if len(p) > 0 && (err == nil || err == io.EOF) {
 		m, err := buf.Next.Read(p)
 		n += m
 		if err != nil {
@@ -88,11 +77,11 @@ func (buf *chain) Read(p []byte) (n int, err error) {
 }
 
 func (buf *chain) Write(p []byte) (n int, err error) {
-	if n, err = buf.Buf.Write(p); err == io.ErrShortWrite && buf.HasNext {
+	if n, err = buf.Buf.Write(p); err == io.ErrShortWrite {
 		err = nil
 	}
 	p = p[n:]
-	if len(p) > 0 && buf.HasNext && err == nil {
+	if len(p) > 0 && err == nil {
 		m, err := buf.Next.Write(p)
 		n += m
 		if err != nil {
@@ -109,10 +98,11 @@ func init() {
 func (buf *chain) MarshalBinary() ([]byte, error) {
 	b := bytes.NewBuffer(nil)
 	enc := gob.NewEncoder(b)
-	enc.Encode(&buf.Buf)
-	enc.Encode(buf.HasNext)
-	if buf.HasNext {
-		enc.Encode(&buf.Next)
+	if err := enc.Encode(&buf.Buf); err != nil {
+		return nil, err
+	}
+	if err := enc.Encode(&buf.Next); err != nil {
+		return nil, err
 	}
 	return b.Bytes(), nil
 }
@@ -123,13 +113,8 @@ func (buf *chain) UnmarshalBinary(data []byte) error {
 	if err := dec.Decode(&buf.Buf); err != nil {
 		return err
 	}
-	if err := dec.Decode(&buf.HasNext); err != nil {
+	if err := dec.Decode(&buf.Next); err != nil {
 		return err
-	}
-	if buf.HasNext {
-		if err := dec.Decode(&buf.Next); err != nil {
-			return err
-		}
 	}
 	return nil
 }
