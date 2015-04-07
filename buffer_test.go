@@ -400,6 +400,46 @@ func checkCap(t *testing.T, buf Buffer, correctCap int64) {
 	}
 }
 
+type bigBuffer struct{}
+
+func (b bigBuffer) Len() int64 { return MAXINT64 }
+
+func (b bigBuffer) Cap() int64 { return MAXINT64 }
+
+func (b bigBuffer) Read(p []byte) (int, error) { return 0, io.ErrUnexpectedEOF }
+
+func (b bigBuffer) Write(p []byte) (int, error) { return 0, io.ErrShortBuffer }
+
+func (b bigBuffer) Reset() {}
+
+func TestBigList(t *testing.T) {
+	l := List([]Buffer{bigBuffer{}, bigBuffer{}})
+	if l.Len() != MAXINT64 {
+		t.Errorf("expected list to be max-size: %d", l.Len())
+	}
+}
+
+func TestBigMulti(t *testing.T) {
+	single := NewMulti(bigBuffer{})
+	if single.Len() != MAXINT64 {
+		t.Errorf("expected len to be max-size: %d", single.Len())
+	}
+	if single.Cap() != MAXINT64 {
+		t.Errorf("expected cap to be max-size: %d", single.Cap())
+	}
+
+	buf := NewMulti(bigBuffer{}, bigBuffer{})
+	if buf.Len() != MAXINT64 {
+		t.Errorf("expected len to be max-size: %d", buf.Len())
+	}
+	if buf.Cap() != MAXINT64 {
+		t.Errorf("expected cap to be max-size: %d", buf.Cap())
+	}
+
+	// test defrag failure
+	NewMulti(badBuffer{}, badBuffer{})
+}
+
 type badBuffer struct{}
 
 func (b badBuffer) Len() int64 { return 1024 }
