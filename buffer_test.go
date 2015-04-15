@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/gob"
+	"errors"
 	"io"
 	"io/ioutil"
 	"math"
@@ -467,6 +468,10 @@ func (b badBuffer) Write(p []byte) (int, error) { return 0, io.ErrShortBuffer }
 
 func (b badBuffer) Reset() {}
 
+func (b badBuffer) MarshalBinary() ([]byte, error) {
+	return nil, errors.New("no data")
+}
+
 func TestBadPartition(t *testing.T) {
 	p := NewPool(func() Buffer { return badBuffer{} })
 	buf := NewPartition(p)
@@ -533,5 +538,21 @@ func TestBadGobFile2(t *testing.T) {
 	dec := gob.NewDecoder(buf)
 	if err := dec.Decode(&buffer); err == nil {
 		t.Error("expeced an error here, file does not exist")
+	}
+}
+
+func TestBadMultiGob(t *testing.T) {
+	var b Buffer = badBuffer{}
+	var b2 Buffer = badBuffer{}
+	var b3 Buffer = New(10)
+	b4 := NewMulti(b, b3)
+	b5 := NewMulti(b3, b2)
+
+	enc := gob.NewEncoder(ioutil.Discard)
+	if err := enc.Encode(&b4); err == nil {
+		t.Error("expected an error here, bad buffer can't be gobbed")
+	}
+	if err := enc.Encode(&b5); err == nil {
+		t.Error("expected an error here, bad buffer can't be gobbed")
 	}
 }
