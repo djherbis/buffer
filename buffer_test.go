@@ -519,3 +519,19 @@ func TestBadGobFile(t *testing.T) {
 		t.Error("expeced an error here, file does not exist")
 	}
 }
+
+func TestBadGobFile2(t *testing.T) {
+	b := New(10)
+	b2 := NewFile(10, &fakeFile{name: "test2"})
+	b3 := NewMulti(b, b2)
+	buf := bytes.NewBuffer(nil)
+	enc := gob.NewEncoder(buf)
+	if err := enc.Encode(&b3); err != nil {
+		t.Error(err)
+	}
+	var buffer Buffer
+	dec := gob.NewDecoder(buf)
+	if err := dec.Decode(&buffer); err == nil {
+		t.Error("expeced an error here, file does not exist")
+	}
+}
