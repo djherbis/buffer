@@ -481,3 +481,39 @@ func TestBadPartition(t *testing.T) {
 		t.Errorf("wrong write error was returned! %v", err)
 	}
 }
+
+type fakeFile struct {
+	name string
+}
+
+func (f *fakeFile) Name() string {
+	return f.name
+}
+
+func (f *fakeFile) Stat() (fi os.FileInfo, err error) {
+	return nil, nil
+}
+
+func (f *fakeFile) ReadAt(p []byte, off int64) (int, error) {
+	return 0, io.EOF
+}
+
+func (f *fakeFile) WriteAt(p []byte, off int64) (int, error) {
+	return 0, io.ErrShortWrite
+}
+
+func (f *fakeFile) Close() error { return nil }
+
+func TestBadGobFile(t *testing.T) {
+	b := NewFile(10, &fakeFile{name: "test"})
+	buf := bytes.NewBuffer(nil)
+	enc := gob.NewEncoder(buf)
+	if err := enc.Encode(&b); err != nil {
+		t.Error(err)
+	}
+	var buffer Buffer
+	dec := gob.NewDecoder(buf)
+	if err := dec.Decode(&buffer); err == nil {
+		t.Error("expeced an error here, file does not exist")
+	}
+}
