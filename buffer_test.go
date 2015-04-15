@@ -506,9 +506,11 @@ func (f *fakeFile) Close() error { return nil }
 
 func TestBadGobFile(t *testing.T) {
 	b := NewFile(10, &fakeFile{name: "test"})
+	b2 := NewFile(10, &fakeFile{name: "test2"})
+	b3 := NewMulti(b, b2)
 	buf := bytes.NewBuffer(nil)
 	enc := gob.NewEncoder(buf)
-	if err := enc.Encode(&b); err != nil {
+	if err := enc.Encode(&b3); err != nil {
 		t.Error(err)
 	}
 	var buffer Buffer
