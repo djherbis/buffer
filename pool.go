@@ -1,8 +1,11 @@
 package buffer
 
 import (
+	"bytes"
+	"encoding/binary"
 	"encoding/gob"
 	"io/ioutil"
+	"log"
 	"os"
 	"sync"
 )
@@ -49,14 +52,29 @@ type memPool struct {
 // NewMemPool returns a Pool, Get() returns an in memory buffer of max size N.
 // Put() returns the buffer to the pool after resetting it.
 // Get() and Put() errors will always be nil.
-// It will not work with Gob.
 func NewMemPool(N int64) Pool {
 	return &memPool{
 		N: N,
 		Pool: NewPool(func() Buffer {
+			log.Println("test")
 			return New(N)
 		}),
 	}
+}
+
+func (m *memPool) MarshalBinary() ([]byte, error) {
+	buf := bytes.NewBuffer(nil)
+	err := binary.Write(buf, binary.LittleEndian, m.N)
+	return buf.Bytes(), err
+}
+
+func (m *memPool) UnmarshalBinary(data []byte) error {
+	buf := bytes.NewReader(data)
+	err := binary.Read(buf, binary.LittleEndian, &m.N)
+	m.Pool = NewPool(func() Buffer {
+		return New(m.N)
+	})
+	return err
 }
 
 type filePool struct {

@@ -31,7 +31,24 @@ func TestPool(t *testing.T) {
 }
 
 func TestMemPool(t *testing.T) {
-	pool := NewMemPool(10)
+	p := NewMemPool(10)
+	poolTest(p, t)
+
+	b := bytes.NewBuffer(nil)
+	enc := gob.NewEncoder(b)
+	if err := enc.Encode(&p); err != nil {
+		t.Error(err)
+	}
+
+	var pool Pool
+	dec := gob.NewDecoder(b)
+	if err := dec.Decode(&pool); err != nil {
+		t.Error(err)
+	}
+	poolTest(pool, t)
+}
+
+func poolTest(pool Pool, t *testing.T) {
 	buf, err := pool.Get()
 	if err != nil {
 		t.Error(err)
