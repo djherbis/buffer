@@ -22,14 +22,20 @@ func BenchmarkMemory(b *testing.B) {
 
 func TestPool(t *testing.T) {
 	pool := NewPool(func() Buffer { return New(10) })
-	buf := pool.Get()
+	buf, err := pool.Get()
+	if err != nil {
+		t.Error(err)
+	}
 	buf.Write([]byte("hello world"))
 	pool.Put(buf)
 }
 
 func TestMemPool(t *testing.T) {
 	pool := NewMemPool(10)
-	buf := pool.Get()
+	buf, err := pool.Get()
+	if err != nil {
+		t.Error(err)
+	}
 	if n, err := buf.Write([]byte("hello world")); n != 10 {
 		t.Errorf("wrote incorrect amount")
 	} else if err == nil {
@@ -42,14 +48,21 @@ func TestMemPool(t *testing.T) {
 }
 
 func TestFilePool(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("there should have been a panic here!")
-		}
-	}()
-
 	pool := NewFilePool(1024, "::~_bad_dir_~::")
-	pool.Get()
+	buf := NewPartition(pool)
+	_, err := buf.Write([]byte("hello"))
+	if err == nil {
+		t.Error("an error was expected here")
+	}
+}
+
+func TestFilePool2(t *testing.T) {
+	pool := NewFilePool(1024, "::~_bad_dir_~::")
+	buf := NewPartition(pool, New(0))
+	_, err := buf.Write([]byte("hello"))
+	if err == nil {
+		t.Error("an error was expected here")
+	}
 }
 
 func TestOverflow(t *testing.T) {

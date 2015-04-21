@@ -61,7 +61,10 @@ buf := buffer.NewFile(100*1024*1024, file)
 
 // A simpler way:
 pool := NewFilePool(100*1024*1024, "") // "" -- use temp dir
-buf := pool.Get()   // allocate the buffer
+buf, err := pool.Get()   // allocate the buffer
+if err != nil {
+  return err
+}
 defer pool.Put(buf) // close and remove the allocated file for the buffer
 
 ```

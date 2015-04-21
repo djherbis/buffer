@@ -55,13 +55,21 @@ func (buf *partition) Write(p []byte) (n int, err error) {
 	for len(p) > 0 {
 
 		if len(buf.List) == 0 {
-			buf.Push(buf.Pool.Get())
+			next, err := buf.Pool.Get()
+			if err != nil {
+				return n, err
+			}
+			buf.Push(next)
 		}
 
 		buffer := buf.List[len(buf.List)-1]
 
 		if Full(buffer) {
-			buf.Push(buf.Pool.Get())
+			next, err := buf.Pool.Get()
+			if err != nil {
+				return n, err
+			}
+			buf.Push(next)
 			continue
 		}
 

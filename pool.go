@@ -8,9 +8,10 @@ import (
 )
 
 // Pool provides a way to Allocate and Release Buffer objects
+// Pools mut be concurrent-safe for calls to Get() and Put().
 type Pool interface {
-	Get() Buffer    // Allocate a Buffer
-	Put(buf Buffer) // Release or Reuse a Buffer
+	Get() (Buffer, error) // Allocate a Buffer
+	Put(buf Buffer) error // Release or Reuse a Buffer
 }
 
 type pool struct {
@@ -18,8 +19,8 @@ type pool struct {
 }
 
 // NewPool returns a Pool(), it's backed by a sync.Pool so its safe for concurrent use.
-// Unlike NewMemPool or NewFilePool, this pool supports concurrent calls to Get() and Put().
-// However it will not work with gob.
+// Get() and Put() errors will always be nil.
+// It will not work with gob.
 func NewPool(New func() Buffer) Pool {
 	return &pool{
 		pool: sync.Pool{
@@ -30,13 +31,14 @@ func NewPool(New func() Buffer) Pool {
 	}
 }
 
-func (p *pool) Get() Buffer {
-	return p.pool.Get().(Buffer)
+func (p *pool) Get() (Buffer, error) {
+	return p.pool.Get().(Buffer), nil
 }
 
-func (p *pool) Put(buf Buffer) {
+func (p *pool) Put(buf Buffer) error {
 	buf.Reset()
 	p.pool.Put(buf)
+	return nil
 }
 
 type memPool struct {
@@ -46,6 +48,8 @@ type memPool struct {
 
 // NewMemPool returns a Pool, Get() returns an in memory buffer of max size N.
 // Put() returns the buffer to the pool after resetting it.
+// Get() and Put() errors will always be nil.
+// It will not work with Gob.
 func NewMemPool(N int64) Pool {
 	return &memPool{
 		N: N,
@@ -55,12 +59,6 @@ func NewMemPool(N int64) Pool {
 	}
 }
 
-func (p *memPool) Get() Buffer { return p.Pool.Get().(Buffer) }
-func (p *memPool) Put(buf Buffer) {
-	buf.Reset()
-	p.Pool.Put(buf)
-}
-
 type filePool struct {
 	N         int64
 	Directory string
@@ -68,24 +66,27 @@ type filePool struct {
 
 // NewFilePool returns a Pool, Get() returns a file-based buffer of max size N.
 // Put() closes and deletes the underlying file for the buffer.
+// Get() may return an error if it fails to create a file for the buffer.
+// Put() may return an error if it fails to delete the file.
 func NewFilePool(N int64, dir string) Pool {
 	return &filePool{N: N, Directory: dir}
 }
 
-func (p *filePool) Get() Buffer {
+func (p *filePool) Get() (Buffer, error) {
 	file, err := ioutil.TempFile(p.Directory, "buffer")
 	if err != nil {
-		panic(err.Error())
+		return nil, err
 	}
-	return NewFile(p.N, file)
+	return NewFile(p.N, file), nil
 }
 
-func (p *filePool) Put(buf Buffer) {
+func (p *filePool) Put(buf Buffer) (err error) {
 	buf.Reset()
 	if fileBuf, ok := buf.(*fileBuffer); ok {
 		fileBuf.file.Close()
-		os.Remove(fileBuf.file.Name())
+		err = os.Remove(fileBuf.file.Name())
 	}
+	return err
 }
 
 func init() {
