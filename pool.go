@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"encoding/gob"
 	"io/ioutil"
-	"log"
 	"os"
 	"sync"
 )
@@ -56,7 +55,6 @@ func NewMemPool(N int64) Pool {
 	return &memPool{
 		N: N,
 		Pool: NewPool(func() Buffer {
-			log.Println("test")
 			return New(N)
 		}),
 	}
