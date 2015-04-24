@@ -603,6 +603,42 @@ func TestBadMultiGob(t *testing.T) {
 	}
 }
 
+func TestSwap(t *testing.T) {
+	defer func() {
+		recover()
+	}()
+	buf := NewSwap(New(5), New(10))
+	if buf.Len() != 0 {
+		t.Error("buffer should start empty got", buf.Len())
+	}
+	if buf.Cap() != 10 {
+		t.Error("cap should be second buffer size (10) got", buf.Cap())
+	}
+	io.WriteString(buf, "hey")
+	data, _ := ioutil.ReadAll(buf)
+	if string(data) != "hey" {
+		t.Error("expected hey got", string(data))
+	}
+	io.WriteString(buf, "hey")
+	io.WriteString(buf, "hey")
+	io.WriteString(buf, "hey")
+	data, _ = ioutil.ReadAll(buf)
+	if string(data) != "heyheyhey" {
+		t.Error("expected heyheyhey got", string(data))
+	}
+	io.WriteString(buf, "hey")
+	if buf.Len() != 3 {
+		t.Error("should have data")
+	}
+	buf.Reset()
+	if buf.Len() != 0 {
+		t.Error("should be empty")
+	}
+
+	NewSwap(New(1), New(0))
+	t.Error("expected panic")
+}
+
 func TestPanicReadAt(t *testing.T) {
 	defer func() {
 		recover()
