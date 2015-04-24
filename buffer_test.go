@@ -113,6 +113,17 @@ func TestWriteAt(t *testing.T) {
 	b = NewFile(5, file)
 	BufferAtTester(t, b)
 
+	b = NewMultiAt(New(1), NewFile(4, file))
+	BufferAtTester(t, b)
+
+	b = NewMultiAt(New(2), NewFile(3, file))
+	BufferAtTester(t, b)
+
+	b = NewMultiAt(New(3), NewFile(2, file))
+	BufferAtTester(t, b)
+
+	b = NewMultiAt(New(4), NewFile(1, file))
+	BufferAtTester(t, b)
 }
 
 func BufferAtTester(t *testing.T, b BufferAt) {
@@ -139,6 +150,11 @@ func Compare(t *testing.T, b BufferAt, s string) {
 	n, _ := b.ReadAt(data, 0)
 	if string(data[:n]) != s {
 		t.Error("Mismatch:", string(data[:n]), s)
+	}
+	off := int64(len(s) / 2)
+	n, _ = b.ReadAt(data, off)
+	if string(data[:n]) != s[off:] {
+		t.Error("Mismach:", string(data[:n]), s[off:])
 	}
 }
 
@@ -585,4 +601,22 @@ func TestBadMultiGob(t *testing.T) {
 	if err := enc.Encode(&b5); err == nil {
 		t.Error("expected an error here, bad buffer can't be gobbed")
 	}
+}
+
+func TestPanicReadAt(t *testing.T) {
+	defer func() {
+		recover()
+	}()
+	buf := toBufferAt(New(5))
+	buf.ReadAt(nil, 0)
+	t.Error("expected a panic!")
+}
+
+func TestPanicWriteAt(t *testing.T) {
+	defer func() {
+		recover()
+	}()
+	buf := toBufferAt(New(5))
+	buf.WriteAt(nil, 0)
+	t.Error("expected a panic!")
 }
