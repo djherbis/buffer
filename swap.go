@@ -6,8 +6,8 @@ import (
 )
 
 type swap struct {
-	A Buffer
-	B Buffer
+	A BufferAt
+	B BufferAt
 }
 
 // NewSwap creates a Buffer which writes to a until you write past a.Cap()
@@ -16,6 +16,15 @@ type swap struct {
 // Note that if b.Cap() <= a.Cap() it will cause a panic, b is expected
 // to be larger in order to accomodate writes past a.Cap().
 func NewSwap(a, b Buffer) Buffer {
+	return NewSwapAt(toBufferAt(a), toBufferAt(b))
+}
+
+// NewSwapAt creates a BufferAt which writes to a until you write past a.Cap()
+// then it io.Copy's from a to b and writes to b.
+// Once the Buffer is empty again, it starts over writing to a.
+// Note that if b.Cap() <= a.Cap() it will cause a panic, b is expected
+// to be larger in order to accomodate writes past a.Cap().
+func NewSwapAt(a, b BufferAt) BufferAt {
 	if b.Cap() <= a.Cap() {
 		panic("Buffer b must be larger than a.")
 	}
@@ -37,6 +46,13 @@ func (buf *swap) Read(p []byte) (n int, err error) {
 	return buf.B.Read(p)
 }
 
+func (buf *swap) ReadAt(p []byte, off int64) (n int, err error) {
+	if buf.A.Len() > 0 {
+		return buf.A.ReadAt(p, off)
+	}
+	return buf.B.ReadAt(p, off)
+}
+
 func (buf *swap) Write(p []byte) (n int, err error) {
 	switch {
 	case buf.B.Len() > 0:
@@ -50,6 +66,24 @@ func (buf *swap) Write(p []byte) (n int, err error) {
 
 	default:
 		n, err = buf.A.Write(p)
+	}
+
+	return n, err
+}
+
+func (buf *swap) WriteAt(p []byte, off int64) (n int, err error) {
+	switch {
+	case buf.B.Len() > 0:
+		n, err = buf.B.WriteAt(p, off)
+
+	case off+int64(len(p)) > buf.A.Cap():
+		_, err = io.Copy(buf.B, buf.A)
+		if err == nil {
+			n, err = buf.B.WriteAt(p, off)
+		}
+
+	default:
+		n, err = buf.A.WriteAt(p, off)
 	}
 
 	return n, err

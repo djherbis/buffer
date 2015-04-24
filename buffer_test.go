@@ -124,6 +124,18 @@ func TestWriteAt(t *testing.T) {
 
 	b = NewMultiAt(New(4), NewFile(1, file))
 	BufferAtTester(t, b)
+
+	b = NewSwapAt(New(1), New(5))
+	BufferAtTester(t, b)
+
+	b = NewSwapAt(New(2), New(5))
+	BufferAtTester(t, b)
+
+	b = NewSwapAt(New(3), New(5))
+	BufferAtTester(t, b)
+
+	b = NewSwapAt(New(4), New(5))
+	BufferAtTester(t, b)
 }
 
 func BufferAtTester(t *testing.T, b BufferAt) {
@@ -600,6 +612,26 @@ func TestBadMultiGob(t *testing.T) {
 	}
 	if err := enc.Encode(&b5); err == nil {
 		t.Error("expected an error here, bad buffer can't be gobbed")
+	}
+}
+
+func TestSwapAt(t *testing.T) {
+	buf := NewSwapAt(New(5), New(10))
+	buf.WriteAt([]byte("hey"), 0)
+	data := make([]byte, 10)
+	n, _ := buf.ReadAt(data, 0)
+	if string(data[:n]) != "hey" {
+		t.Error("expected hey got", string(data[:n]))
+	}
+	buf.WriteAt([]byte("hey"), 3)
+	n, _ = buf.ReadAt(data, 1)
+	if string(data[:n]) != "eyhey" {
+		t.Error("expected eyhey got", string(data[:n]))
+	}
+	buf.WriteAt([]byte("hey"), 5)
+	n, _ = buf.ReadAt(data, 1)
+	if string(data[:n]) != "eyhehey" {
+		t.Error("expected eyhehey got", string(data[:n]))
 	}
 }
 
