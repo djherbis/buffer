@@ -667,6 +667,8 @@ func TestSwap(t *testing.T) {
 		t.Error("should be empty")
 	}
 
+	runPerfectSeries(t, NewSwap(New(512), New(1024)))
+
 	NewSwap(New(1), New(0))
 	t.Error("expected panic")
 }
