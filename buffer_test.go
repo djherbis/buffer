@@ -83,8 +83,22 @@ func TestFilePool2(t *testing.T) {
 }
 
 func TestOverflow(t *testing.T) {
-	buf := NewMulti(New(5), NewDiscard())
+	buf := NewMulti(New(5), Discard)
 	buf.Write([]byte("Hello World"))
+
+	b := bytes.NewBuffer(nil)
+	enc := gob.NewEncoder(b)
+	if err := enc.Encode(&buf); err != nil {
+		t.Error(err)
+	}
+
+	var buf2 Buffer
+	dec := gob.NewDecoder(b)
+	if err := dec.Decode(&buf2); err != nil {
+		t.Error(err)
+	}
+
+	buf = buf2
 
 	data, err := ioutil.ReadAll(buf)
 	if err != nil {
@@ -237,7 +251,7 @@ func TestGob(t *testing.T) {
 }
 
 func TestDiscard(t *testing.T) {
-	buf := NewDiscard()
+	buf := Discard
 	if buf.Cap() != math.MaxInt64 {
 		t.Errorf("cap isn't infinite")
 	}
@@ -253,7 +267,7 @@ func TestList(t *testing.T) {
 	mem.Write([]byte("Hello"))
 	ory.Write([]byte("world"))
 
-	buf := List([]Buffer{mem, ory, NewDiscard()})
+	buf := List([]Buffer{mem, ory, Discard})
 	if buf.Len() != 10 {
 		t.Errorf("incorrect sum of lengths")
 	}
@@ -288,7 +302,7 @@ func TestList2(t *testing.T) {
 }
 
 func TestSpill(t *testing.T) {
-	buf := NewSpill(New(5), NewDiscard())
+	buf := NewSpill(New(5), Discard)
 	buf.Write([]byte("Hello World"))
 	data := make([]byte, 12)
 	n, _ := buf.Read(data)
