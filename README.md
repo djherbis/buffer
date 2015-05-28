@@ -137,7 +137,7 @@ import (
 )
 
 // Reads will return io.EOF, writes will return success (nil error, full write) but no data was written.
-buf := buf.NewDiscard()
+buf := buffer.Discard
 ```
 
 Custom Buffers
