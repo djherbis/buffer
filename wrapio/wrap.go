@@ -1,9 +1,6 @@
 package wrapio
 
-import (
-	"fmt"
-	"io"
-)
+import "io"
 
 // DoerAt is a common interface for wrappers WriteAt or ReadAt functions
 type DoerAt interface {
@@ -98,26 +95,38 @@ func (r *WrapReader) ReadAt(p []byte, off int64) (n int, err error) {
 	return Wrap(r, p, off, r.wrapAt)
 }
 
+// maxConsecutiveEmptyActions determines how many consecutive empty reads/writes can occur before giving up
+const maxConsecutiveEmptyActions = 100
+
 // Wrap causes an action on an array of bytes (like read/write) to be done from an offset off,
 // wrapping at offset wrapAt.
 func Wrap(w DoerAt, p []byte, off int64, wrapAt int64) (n int, err error) {
-	var m int
+	var m, fails int
 
 	off %= wrapAt
 
 	for len(p) > 0 {
 
 		if off+int64(len(p)) < wrapAt {
-			if m, err = w.DoAt(p, off); err != nil && err != io.EOF {
-				fmt.Println(off, m, len(p), err)
-				return n + m, err
-			}
+			m, err = w.DoAt(p, off)
 		} else {
 			space := wrapAt - off
-			if m, err = w.DoAt(p[:space], off); err != nil && err != io.EOF {
-				fmt.Println(off, m, len(p[:space]), err)
-				return n + m, err
-			}
+			m, err = w.DoAt(p[:space], off)
+		}
+
+		if err != nil && err != io.EOF {
+			return n + m, err
+		}
+
+		switch m {
+		case 0:
+			fails++
+		default:
+			fails = 0
+		}
+
+		if fails > maxConsecutiveEmptyActions {
+			return n + m, io.ErrNoProgress
 		}
 
 		n += m

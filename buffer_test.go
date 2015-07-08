@@ -704,3 +704,20 @@ func TestPanicWriteAt(t *testing.T) {
 	buf.WriteAt(nil, 0)
 	t.Error("expected a panic!")
 }
+
+type badFile struct{}
+
+func (b badFile) Name() string                             { return "" }
+func (b badFile) Stat() (os.FileInfo, error)               { return nil, errors.New("unsupported") }
+func (b badFile) ReadAt(p []byte, off int64) (int, error)  { return 0, nil }
+func (b badFile) WriteAt(p []byte, off int64) (int, error) { return len(p), nil }
+func (b badFile) Close() error                             { return nil }
+
+func TestWrapioBreakout(t *testing.T) {
+	buf := NewFile(10, badFile{})
+	io.WriteString(buf, "hello world")
+	if _, err := ioutil.ReadAll(buf); err != io.ErrNoProgress {
+		t.Error("expected no progress to be made")
+		t.FailNow()
+	}
+}
