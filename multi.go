@@ -113,16 +113,11 @@ func (buf *chain) ReadAt(p []byte, off int64) (n int, err error) {
 	}
 
 	n, err = buf.Buf.ReadAt(p, off)
-	//fmt.Printf("r %s|", string(p[:n]))
-
 	if len(p[n:]) > 0 && (err == nil || err == io.EOF) {
 		var m int
 		m, err = buf.Next.ReadAt(p[n:], 0)
-		//fmt.Printf("%s|", string(p[n:n+m]))
 		n += m
 	}
-	//fmt.Println()
-
 	return n, err
 }
 
