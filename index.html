@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Buffer by djherbis</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">Buffer</h1>
+      <h2 class="project-tagline">Composable Buffers for Go #golang</h2>
+      <a href="https://github.com/djherbis/buffer" class="btn">View on GitHub</a>
+      <a href="https://github.com/djherbis/buffer/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/djherbis/buffer/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <h1>
+<a id="buffer-" class="anchor" href="#buffer-" aria-hidden="true"><span class="octicon octicon-link"></span></a>Buffer </h1>
+
+<p><a href="https://godoc.org/github.com/djherbis/buffer"><img src="https://godoc.org/github.com/djherbis/buffer?status.svg" alt="GoDoc"></a>
+<a href="LICENSE.txt"><img src="https://img.shields.io/badge/license-MIT-brightgreen.svg" alt="Software License"></a>
+<a href="https://travis-ci.org/djherbis/buffer"><img src="https://travis-ci.org/djherbis/buffer.svg?branch=master" alt="Build Status"></a> 
+<a href="https://coveralls.io/r/djherbis/buffer?branch=master"><img src="https://coveralls.io/repos/djherbis/buffer/badge.svg?branch=master" alt="Coverage Status"></a></p>
+
+<h2>
+<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span class="octicon octicon-link"></span></a>Usage</h2>
+
+<p>The following buffers provide simple unique behaviours which when composed can create complex buffering strategies. For use with github.com/djherbis/nio for Buffered io.Pipe and io.Copy implementations.</p>
+
+<p>For example: </p>
+
+<div class="highlight highlight-go"><pre><span class="pl-k">import</span> (
+  <span class="pl-s"><span class="pl-pds">"</span>github.com/djherbis/buffer<span class="pl-pds">"</span></span>
+  <span class="pl-s"><span class="pl-pds">"</span>github.com/djherbis/nio<span class="pl-pds">"</span></span>
+
+  <span class="pl-s"><span class="pl-pds">"</span>io/ioutil<span class="pl-pds">"</span></span>
+)
+
+<span class="pl-c">// Buffer 32KB to Memory, after that buffer to 100MB chunked files</span>
+<span class="pl-smi">buf</span> <span class="pl-k">:=</span> buffer.<span class="pl-c1">NewUnboundedBuffer</span>(<span class="pl-c1">32</span>*<span class="pl-c1">1024</span>, <span class="pl-c1">100</span>*<span class="pl-c1">1024</span>*<span class="pl-c1">1024</span>)
+nio.<span class="pl-c1">Copy</span>(w, r, buf) <span class="pl-c">// Reads from r, writes to buf, reads from buf writes to w (concurrently).</span>
+
+<span class="pl-c">// Buffer 32KB to Memory, discard overflow</span>
+buf = buffer.<span class="pl-c1">NewSpill</span>(<span class="pl-c1">32</span>*<span class="pl-c1">1024</span>, ioutil.<span class="pl-smi">Discard</span>)
+nio.<span class="pl-c1">Copy</span>(w, r, buf)</pre></div>
+
+<h2>
+<a id="supported-buffers" class="anchor" href="#supported-buffers" aria-hidden="true"><span class="octicon octicon-link"></span></a>Supported Buffers</h2>
+
+<h4>
+<a id="bounded-buffers" class="anchor" href="#bounded-buffers" aria-hidden="true"><span class="octicon octicon-link"></span></a>Bounded Buffers</h4>
+
+<p>Memory: Wrapper for bytes.Buffer</p>
+
+<p>File: File-based buffering. The file never exceeds Cap() in length, no matter how many times its written/read from. It accomplishes this by "wrapping" around the fixed max-length file when the data gets too long but there is available freed space at the beginning of the file. The caller is responsible for closing and deleting the file when done.</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-k">import</span> (
+  <span class="pl-s"><span class="pl-pds">"</span>ioutil<span class="pl-pds">"</span></span>
+  <span class="pl-s"><span class="pl-pds">"</span>os<span class="pl-pds">"</span></span>
+
+  <span class="pl-s"><span class="pl-pds">"</span>github.com/djherbis/buffer<span class="pl-pds">"</span></span>
+)
+
+<span class="pl-c">// Create a File-based Buffer with max size 100MB</span>
+<span class="pl-smi">file</span>, <span class="pl-smi">err</span> <span class="pl-k">:=</span> ioutil.<span class="pl-c1">TempFile</span>(<span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>buffer<span class="pl-pds">"</span></span>)
+<span class="pl-k">if</span> err != <span class="pl-c1">nil</span> {
+    <span class="pl-k">return</span> err
+}
+<span class="pl-k">defer</span> os.<span class="pl-c1">Remove</span>(file.<span class="pl-c1">Name</span>())
+<span class="pl-k">defer</span> file.<span class="pl-c1">Close</span>()
+
+<span class="pl-smi">buf</span> <span class="pl-k">:=</span> buffer.<span class="pl-c1">NewFile</span>(<span class="pl-c1">100</span>*<span class="pl-c1">1024</span>*<span class="pl-c1">1024</span>, file)
+
+<span class="pl-c">// A simpler way:</span>
+<span class="pl-smi">pool</span> <span class="pl-k">:=</span> <span class="pl-c1">NewFilePool</span>(<span class="pl-c1">100</span>*<span class="pl-c1">1024</span>*<span class="pl-c1">1024</span>, <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>) <span class="pl-c">// "" -- use temp dir</span>
+<span class="pl-smi">buf</span>, <span class="pl-smi">err</span> <span class="pl-k">:=</span> pool.<span class="pl-c1">Get</span>()   <span class="pl-c">// allocate the buffer</span>
+<span class="pl-k">if</span> err != <span class="pl-c1">nil</span> {
+  <span class="pl-k">return</span> err
+}
+<span class="pl-k">defer</span> pool.<span class="pl-c1">Put</span>(buf) <span class="pl-c">// close and remove the allocated file for the buffer</span>
+</pre></div>
+
+<p>Multi: A fixed length linked-list of buffers. Each buffer reads from the next buffer so that all the buffered data is shifted upwards in the list when reading. Writes are always written to the first buffer in the list whose Len() &lt; Cap().</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-k">import</span> (
+  <span class="pl-s"><span class="pl-pds">"</span>github.com/djherbis/buffer<span class="pl-pds">"</span></span>
+)
+
+<span class="pl-smi">mem</span>  <span class="pl-k">:=</span> buffer.<span class="pl-c1">New</span>(<span class="pl-c1">32</span>*<span class="pl-c1">1024</span>)
+<span class="pl-smi">file</span> <span class="pl-k">:=</span> buffer.<span class="pl-c1">NewFile</span>(<span class="pl-c1">100</span>*<span class="pl-c1">1024</span>*<span class="pl-c1">1024</span>, someFileObj)) <span class="pl-c">// you'll need to manage Open(), Close() and Delete someFileObj</span>
+
+<span class="pl-c">// Buffer composed of 32KB of memory, and 100MB of file.</span>
+<span class="pl-smi">buf</span> <span class="pl-k">:=</span> buffer.<span class="pl-c1">NewMulti</span>(mem, file)</pre></div>
+
+<h4>
+<a id="unbounded-buffers" class="anchor" href="#unbounded-buffers" aria-hidden="true"><span class="octicon octicon-link"></span></a>Unbounded Buffers</h4>
+
+<p>Partition: A queue of buffers. Writes always go to the first buffer in the queue which isn't full. If all buffers are full, a new buffer is "pushed" to the end of the queue (generated by a user-given function). Reads come from the first buffer, when the first buffer is emptied it is "popped" off the queue.</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-k">import</span> (
+  <span class="pl-s"><span class="pl-pds">"</span>github.com/djherbis/buffer<span class="pl-pds">"</span></span>
+)
+
+<span class="pl-c">// Create 32 KB sized-chunks of memory as needed to expand/contract the buffer size.</span>
+<span class="pl-smi">buf</span> <span class="pl-k">:=</span> buffer.<span class="pl-c1">NewPartition</span>(<span class="pl-c1">NewMemPool</span>(<span class="pl-c1">32</span>*<span class="pl-c1">1024</span>))
+
+<span class="pl-c">// Create 100 MB sized-chunks of files as needed to expand/contract the buffer size.</span>
+buf = buffer.<span class="pl-c1">NewPartition</span>(<span class="pl-c1">NewFilePool</span>(<span class="pl-c1">100</span>*<span class="pl-c1">1024</span>*<span class="pl-c1">1024</span>, <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>))</pre></div>
+
+<p>Ring: A single buffer which begins overwriting the oldest buffered data when it reaches its capacity.</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-k">import</span> (
+  <span class="pl-s"><span class="pl-pds">"</span>github.com/djherbis/buffer<span class="pl-pds">"</span></span>
+)
+
+<span class="pl-c">// Create a File-based Buffer with max size 100MB</span>
+<span class="pl-smi">file</span> <span class="pl-k">:=</span> buffer.<span class="pl-c1">NewFile</span>(<span class="pl-c1">100</span>*<span class="pl-c1">1024</span>*<span class="pl-c1">1024</span>, someFileObj) <span class="pl-c">// you'll need to Open(), Close() and Delete someFileObj.</span>
+
+<span class="pl-c">// If buffered data exceeds 100MB, overwrite oldest data as new data comes in</span>
+<span class="pl-smi">buf</span> <span class="pl-k">:=</span> buffer.<span class="pl-c1">NewRing</span>(file) <span class="pl-c">// requires BufferAt interface.</span></pre></div>
+
+<p>Spill: A single buffer which when full, writes the overflow to a given io.Writer.
+-&gt; Note that it will actually "spill" whenever there is an error while writing, this should only be a "full" error.</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-k">import</span> (
+  <span class="pl-s"><span class="pl-pds">"</span>github.com/djherbis/buffer<span class="pl-pds">"</span></span>
+  <span class="pl-s"><span class="pl-pds">"</span>github.com/djherbis/nio<span class="pl-pds">"</span></span>
+
+  <span class="pl-s"><span class="pl-pds">"</span>io/ioutil<span class="pl-pds">"</span></span>
+)
+
+<span class="pl-c">// Buffer 32KB to Memory, discard overflow</span>
+<span class="pl-smi">buf</span> <span class="pl-k">:=</span> buffer.<span class="pl-c1">NewSpill</span>(<span class="pl-c1">32</span>*<span class="pl-c1">1024</span>, ioutil.<span class="pl-smi">Discard</span>)
+nio.<span class="pl-c1">Copy</span>(w, r, buf)</pre></div>
+
+<h4>
+<a id="empty-buffer" class="anchor" href="#empty-buffer" aria-hidden="true"><span class="octicon octicon-link"></span></a>Empty Buffer</h4>
+
+<p>Discard: Reads always return EOF, writes goto ioutil.Discard.</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-k">import</span> (
+  <span class="pl-s"><span class="pl-pds">"</span>github.com/djherbis/buffer<span class="pl-pds">"</span></span>
+)
+
+<span class="pl-c">// Reads will return io.EOF, writes will return success (nil error, full write) but no data was written.</span>
+<span class="pl-smi">buf</span> <span class="pl-k">:=</span> buffer.<span class="pl-smi">Discard</span></pre></div>
+
+<h2>
+<a id="custom-buffers" class="anchor" href="#custom-buffers" aria-hidden="true"><span class="octicon octicon-link"></span></a>Custom Buffers</h2>
+
+<p>Feel free to implement your own buffer, just meet the required interface (Buffer/BufferAt) and compose away!</p>
+
+<div class="highlight highlight-go"><pre>
+<span class="pl-c">// Buffer Interface used by Multi and Partition</span>
+<span class="pl-k">type</span> <span class="pl-v">Buffer</span> <span class="pl-k">interface</span> {
+    <span class="pl-c1">Len</span>() <span class="pl-k">int64</span>
+    <span class="pl-c1">Cap</span>() <span class="pl-k">int64</span>
+    io.<span class="pl-smi">Reader</span>
+    io.<span class="pl-smi">Writer</span>
+    <span class="pl-c1">Reset</span>()
+}
+
+<span class="pl-c">// BufferAt interface used by Ring</span>
+<span class="pl-k">type</span> <span class="pl-v">BufferAt</span> <span class="pl-k">interface</span> {
+    <span class="pl-v">Buffer</span>
+    io.<span class="pl-smi">ReaderAt</span>
+    io.<span class="pl-smi">WriterAt</span>
+}
+</pre></div>
+
+<h2>
+<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Installation</h2>
+
+<div class="highlight highlight-sh"><pre>go get github.com/djherbis/buffer</pre></div>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/djherbis/buffer">Buffer</a> is maintained by <a href="https://github.com/djherbis">djherbis</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
+
