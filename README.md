@@ -93,10 +93,10 @@ import (
 )
 
 // Create 32 KB sized-chunks of memory as needed to expand/contract the buffer size.
-buf := buffer.NewPartition(NewMemPool(32*1024))
+buf := buffer.NewPartition(buffer.NewMemPool(32*1024))
 
 // Create 100 MB sized-chunks of files as needed to expand/contract the buffer size.
-buf = buffer.NewPartition(NewFilePool(100*1024*1024, ""))
+buf = buffer.NewPartition(buffer.NewFilePool(100*1024*1024, ""))
 ```
 
 Ring: A single buffer which begins overwriting the oldest buffered data when it reaches its capacity.
