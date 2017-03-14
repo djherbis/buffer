@@ -60,7 +60,7 @@ defer file.Close()
 buf := buffer.NewFile(100*1024*1024, file)
 
 // A simpler way:
-pool := NewFilePool(100*1024*1024, "") // "" -- use temp dir
+pool := buffer.NewFilePool(100*1024*1024, "") // "" -- use temp dir
 buf, err := pool.Get()   // allocate the buffer
 if err != nil {
   return err
