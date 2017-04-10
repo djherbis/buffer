@@ -22,6 +22,11 @@ type BufferAt interface {
 	io.WriterAt
 }
 
+type BufferAtFrom interface {
+	BufferAt
+	io.ReaderFrom
+}
+
 func len64(p []byte) int64 {
 	return int64(len(p))
 }

@@ -14,9 +14,9 @@ type memory struct {
 	*bytes.Buffer
 }
 
-// New returns a new in memory BufferAt with max size N.
+// New returns a new in memory BufferAtFrom with max size N.
 // It's backed by a bytes.Buffer.
-func New(n int64) BufferAt {
+func New(n int64) BufferAtFrom {
 	return &memory{
 		N:      n,
 		Buffer: bytes.NewBuffer(nil),
