@@ -33,10 +33,10 @@ func (buf *ring) Cap() int64 {
 }
 
 func (buf *ring) Read(p []byte) (n int, err error) {
-	if buf.Len() == buf.BufferAt.Cap() {
+	if buf.L == buf.BufferAt.Cap() {
 		buf.WrapReader.Seek(buf.WrapWriter.Offset(), 0)
 	}
-	n, err = io.LimitReader(buf.WrapReader, buf.Len()).Read(p)
+	n, err = io.LimitReader(buf.WrapReader, buf.L).Read(p)
 	buf.L -= int64(n)
 	return n, err
 }

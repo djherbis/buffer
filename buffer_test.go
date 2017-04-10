@@ -201,7 +201,7 @@ func TestRing(t *testing.T) {
 
 	ring.Write([]byte("de"))
 	if ring.Len() != 3 {
-		t.Errorf("expected riing len == 3")
+		t.Errorf("expected ring len == 3")
 	}
 
 	data := make([]byte, 12)
