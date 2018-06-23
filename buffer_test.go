@@ -184,6 +184,36 @@ func Compare(t *testing.T, b BufferAt, s string) {
 	}
 }
 
+func TestRingComplex(t *testing.T) {
+	ringSize := 10
+	data := []byte("hello!")
+	ring := NewRing(New(int64(ringSize)))
+	buf := make([]byte, ringSize)
+
+	for i := 0; i < 10; i++ {
+		ring.Write(data)
+		n, err := ring.Read(buf)
+		if err != nil {
+			t.Errorf("unexpected error %s", err)
+		} else if !bytes.Equal(buf[:n], data) {
+			t.Errorf("expected %s got %s", data, buf[:n])
+		}
+	}
+
+	// we are going to overflow the buffer here, we expect the last 10 bytes to remain
+	repData := bytes.Repeat(data, 3)
+	leftover := repData[len(repData)-ringSize:]
+	for i := 0; i < 10; i++ {
+		ring.Write(repData)
+		n, err := ring.Read(buf)
+		if err != nil {
+			t.Errorf("unexpected error %s", err)
+		} else if !bytes.Equal(buf[:n], leftover) {
+			t.Errorf("expected %s got %s", leftover, buf[:n])
+		}
+	}
+}
+
 func TestRing(t *testing.T) {
 	ring := NewRing(New(3))
 	if ring.Len() != 0 {
