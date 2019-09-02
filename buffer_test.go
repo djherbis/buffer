@@ -156,6 +156,18 @@ func TestWriteAt(t *testing.T) {
 
 	b = NewPartitionAt(NewFilePoolAt(3, os.TempDir()))
 	BufferAtTester(t, b)
+
+	b = NewPartitionAt(NewMemPoolAt(1))
+	BufferAtTester(t, b)
+
+	b = NewPartitionAt(NewFilePoolAt(1, os.TempDir()))
+	BufferAtTester(t, b)
+
+	b = NewPartitionAt(NewMemPoolAt(5))
+	BufferAtTester(t, b)
+
+	b = NewPartitionAt(NewFilePoolAt(5, os.TempDir()))
+	BufferAtTester(t, b)
 }
 
 func BufferAtTester(t *testing.T, b BufferAt) {
