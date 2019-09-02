@@ -65,5 +65,5 @@ func (buf *fileBuffer) UnmarshalBinary(data []byte) error {
 
 	_, err = fmt.Fscanln(buffer, &N, &L, &O)
 	buf.Wrapper = wrapio.NewWrapper(file, L, O, N)
-	return nil
+	return err
 }
