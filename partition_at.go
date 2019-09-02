@@ -113,9 +113,7 @@ func (buf *partitionAt) Write(p []byte) (n int, err error) {
 		n += m
 		p = p[m:]
 
-		if er == io.ErrShortWrite {
-			er = nil
-		} else if er != nil {
+		if er != nil && er != io.ErrShortWrite {
 			return n, er
 		}
 

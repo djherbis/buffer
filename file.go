@@ -56,6 +56,9 @@ func (buf *fileBuffer) UnmarshalBinary(data []byte) error {
 	var filename string
 	var N, L, O int64
 	_, err := fmt.Fscanln(buffer, &filename)
+	if err != nil {
+		return err
+	}
 
 	file, err := os.Open(filename)
 	if err != nil {
