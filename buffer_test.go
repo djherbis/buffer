@@ -150,9 +150,28 @@ func TestWriteAt(t *testing.T) {
 
 	b = NewSwapAt(New(4), New(5))
 	BufferAtTester(t, b)
+
+	b = NewPartitionAt(NewMemPoolAt(3))
+	BufferAtTester(t, b)
+
+	b = NewPartitionAt(NewFilePoolAt(3, os.TempDir()))
+	BufferAtTester(t, b)
+
+	b = NewPartitionAt(NewMemPoolAt(1))
+	BufferAtTester(t, b)
+
+	b = NewPartitionAt(NewFilePoolAt(1, os.TempDir()))
+	BufferAtTester(t, b)
+
+	b = NewPartitionAt(NewMemPoolAt(5))
+	BufferAtTester(t, b)
+
+	b = NewPartitionAt(NewFilePoolAt(5, os.TempDir()))
+	BufferAtTester(t, b)
 }
 
 func BufferAtTester(t *testing.T, b BufferAt) {
+	t.Helper()
 	b.WriteAt([]byte("abc"), 0)
 	Compare(t, b, "abc")
 
@@ -162,25 +181,39 @@ func BufferAtTester(t *testing.T, b BufferAt) {
 	b.WriteAt([]byte("abc"), 2)
 	Compare(t, b, "aaabc")
 
-	b.WriteAt([]byte("abc"), 3)
-	Compare(t, b, "aaaab")
+	b.WriteAt([]byte("def"), 3)
+	switch {
+	case b.Cap() > 5:
+		Compare(t, b, "aaadef")
+	default:
+		Compare(t, b, "aaade")
+	}
 
 	b.Read(make([]byte, 2))
+	switch {
+	case b.Cap() > 5:
+		Compare(t, b, "adef")
+	default:
+		Compare(t, b, "ade")
+	}
 
-	Compare(t, b, "aab")
+	b.WriteAt([]byte("ab"), 3)
+	Compare(t, b, "adeab")
+
 	b.Reset()
 }
 
 func Compare(t *testing.T, b BufferAt, s string) {
+	t.Helper()
 	data := make([]byte, b.Len())
 	n, _ := b.ReadAt(data, 0)
 	if string(data[:n]) != s {
-		t.Error("Mismatch:", string(data[:n]), s)
+		t.Errorf("Mismatch: got %q want %q", string(data[:n]), s)
 	}
 	off := int64(len(s) / 2)
 	n, _ = b.ReadAt(data, off)
 	if string(data[:n]) != s[off:] {
-		t.Error("Mismach:", string(data[:n]), s[off:])
+		t.Errorf("Mismatch: got %q want %q", string(data[:n]), s[off:])
 	}
 }
 
@@ -749,5 +782,134 @@ func TestWrapioBreakout(t *testing.T) {
 	if _, err := ioutil.ReadAll(buf); err != io.ErrNoProgress {
 		t.Error("expected no progress to be made")
 		t.FailNow()
+	}
+}
+
+func TestListAt(t *testing.T) {
+	mem := New(10)
+	ory := New(10)
+	mem.Write([]byte("Hello"))
+	ory.Write([]byte("world"))
+
+	buf := ListAt([]BufferAt{mem, ory})
+	if buf.Len() != 10 {
+		t.Errorf("incorrect sum of lengths")
+	}
+	if buf.Cap() != 20 {
+		t.Errorf("incorrect sum of caps")
+	}
+
+	buf.Reset()
+	if buf.Len() != 0 {
+		t.Errorf("buffer should be empty")
+	}
+}
+
+func TestPoolAt(t *testing.T) {
+	pool := NewPoolAt(func() BufferAt { return New(10) })
+	buf, err := pool.Get()
+	if err != nil {
+		t.Error(err)
+	}
+	buf.Write([]byte("hello world"))
+	pool.Put(buf)
+}
+
+func TestMemPoolAt(t *testing.T) {
+	p := NewMemPoolAt(10)
+	poolAtTest(p, t)
+
+	b := bytes.NewBuffer(nil)
+	enc := gob.NewEncoder(b)
+	if err := enc.Encode(&p); err != nil {
+		t.Error(err)
+	}
+
+	var pool PoolAt
+	dec := gob.NewDecoder(b)
+	if err := dec.Decode(&pool); err != nil {
+		t.Error(err)
+	}
+	poolAtTest(pool, t)
+}
+
+func poolAtTest(pool PoolAt, t *testing.T) {
+	buf, err := pool.Get()
+	if err != nil {
+		t.Error(err)
+	}
+	if n, err := buf.Write([]byte("hello world")); n != 10 {
+		t.Errorf("wrote incorrect amount")
+	} else if err == nil {
+		t.Errorf("should have been a shortwrite error here")
+	}
+	pool.Put(buf)
+	if buf.Len() > 0 {
+		t.Errorf("should have emptied the buffer")
+	}
+}
+
+func TestPartitionAt(t *testing.T) {
+	buf := NewPartitionAt(NewMemPoolAt(5))
+	buf.Write([]byte("Hello World"))
+	data := make([]byte, 12)
+	n, _ := buf.Read(data)
+	if !bytes.Equal(data[:n], []byte("Hello World")) {
+		t.Error("Read Failed. " + string(data[:n]))
+	}
+
+	checkCap(t, buf, math.MaxInt64)
+	runPerfectSeries(t, buf)
+}
+
+// TestPartitionAt2 tests ability to read at various offsets from buffer previously written.
+func TestPartitionAt2(t *testing.T) {
+	buf := NewPartitionAt(NewMemPoolAt(5))
+	buf.Write([]byte("Hello World"))
+	data := make([]byte, 2)
+	n, _ := buf.ReadAt(data, 2)
+	if !bytes.Equal(data[:n], []byte("ll")) {
+		t.Error("Read Failed. " + string(data[:n]))
+	}
+	n, _ = buf.ReadAt(data, 4)
+	if !bytes.Equal(data[:n], []byte("o ")) {
+		t.Error("Read Failed. " + string(data[:n]))
+	}
+	n, _ = buf.ReadAt(data, 10)
+	if !bytes.Equal(data[:n], []byte("d")) {
+		t.Error("Read Failed. " + string(data[:n]))
+	}
+	n, _ = buf.ReadAt(data, 100)
+	if !bytes.Equal(data[:n], []byte{}) {
+		t.Error("Read Failed. " + string(data[:n]))
+	}
+
+	buf.Reset()
+	checkCap(t, buf, math.MaxInt64)
+	runPerfectSeries(t, buf)
+}
+
+// TestPartitionAt3 tests ability to overwrite buffer previously written.
+func TestPartitionAt3(t *testing.T) {
+	buf := NewPartitionAt(NewMemPoolAt(5))
+	buf.Write(make([]byte, 15, 15)) // allocates 3 membuffers
+	buf.WriteAt([]byte("hey"), 0)
+	data := make([]byte, 10)
+	data = data[:3]
+	buf.ReadAt(data, 0)
+	if string(data) != "hey" {
+		t.Error("expected hey got", string(data))
+	}
+	buf.WriteAt([]byte("hey"), 3)
+	data = data[:5]
+	buf.ReadAt(data, 1)
+	if string(data) != "eyhey" {
+		t.Error("expected eyhey got", string(data))
+	}
+	buf.WriteAt([]byte("hey"), 5)
+	data = data[:7]
+	buf.ReadAt(data, 1)
+	if string(data) != "eyhehey" {
+		t.Error("expected eyhehey got", string(data))
 	}
 }

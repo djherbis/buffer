@@ -51,25 +51,30 @@ func (buf *partition) Read(p []byte) (n int, err error) {
 	return n, nil
 }
 
+func (buf *partition) grow() error {
+	next, err := buf.Pool.Get()
+	if err != nil {
+		return err
+	}
+	buf.Push(next)
+	return nil
+}
+
 func (buf *partition) Write(p []byte) (n int, err error) {
 	for len(p) > 0 {
 
 		if len(buf.List) == 0 {
-			next, err := buf.Pool.Get()
-			if err != nil {
+			if err := buf.grow(); err != nil {
 				return n, err
 			}
-			buf.Push(next)
 		}
 
 		buffer := buf.List[len(buf.List)-1]
 
 		if Full(buffer) {
-			next, err := buf.Pool.Get()
-			if err != nil {
+			if err := buf.grow(); err != nil {
 				return n, err
 			}
-			buf.Push(next)
 			continue
 		}
 
