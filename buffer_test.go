@@ -150,9 +150,16 @@ func TestWriteAt(t *testing.T) {
 
 	b = NewSwapAt(New(4), New(5))
 	BufferAtTester(t, b)
+
+	b = NewPartitionAt(NewMemPoolAt(3))
+	BufferAtTester(t, b)
+
+	b = NewPartitionAt(NewFilePoolAt(3, os.TempDir()))
+	BufferAtTester(t, b)
 }
 
 func BufferAtTester(t *testing.T, b BufferAt) {
+	t.Helper()
 	b.WriteAt([]byte("abc"), 0)
 	Compare(t, b, "abc")
 
@@ -162,25 +169,39 @@ func BufferAtTester(t *testing.T, b BufferAt) {
 	b.WriteAt([]byte("abc"), 2)
 	Compare(t, b, "aaabc")
 
-	b.WriteAt([]byte("abc"), 3)
-	Compare(t, b, "aaaab")
+	b.WriteAt([]byte("def"), 3)
+	switch {
+	case b.Cap() > 5:
+		Compare(t, b, "aaadef")
+	default:
+		Compare(t, b, "aaade")
+	}
 
 	b.Read(make([]byte, 2))
+	switch {
+	case b.Cap() > 5:
+		Compare(t, b, "adef")
+	default:
+		Compare(t, b, "ade")
+	}
 
-	Compare(t, b, "aab")
+	b.WriteAt([]byte("ab"), 3)
+	Compare(t, b, "adeab")
+
 	b.Reset()
 }
 
 func Compare(t *testing.T, b BufferAt, s string) {
+	t.Helper()
 	data := make([]byte, b.Len())
 	n, _ := b.ReadAt(data, 0)
 	if string(data[:n]) != s {
-		t.Error("Mismatch:", string(data[:n]), s)
+		t.Errorf("Mismatch: got %q want %q", string(data[:n]), s)
 	}
 	off := int64(len(s) / 2)
 	n, _ = b.ReadAt(data, off)
 	if string(data[:n]) != s[off:] {
-		t.Error("Mismach:", string(data[:n]), s[off:])
+		t.Errorf("Mismatch: got %q want %q", string(data[:n]), s[off:])
 	}
 }
 
@@ -824,6 +845,9 @@ func TestPartitionAt(t *testing.T) {
 	if !bytes.Equal(data[:n], []byte("Hello World")) {
 		t.Error("Read Failed. " + string(data[:n]))
 	}
+
+	checkCap(t, buf, math.MaxInt64)
+	runPerfectSeries(t, buf)
 }
 
 // TestPartitionAt2 tests ability to read at various offsets from buffer previously written.
@@ -847,6 +871,10 @@ func TestPartitionAt2(t *testing.T) {
 	if !bytes.Equal(data[:n], []byte{}) {
 		t.Error("Read Failed. " + string(data[:n]))
 	}
+
+	buf.Reset()
+	checkCap(t, buf, math.MaxInt64)
+	runPerfectSeries(t, buf)
 }
 
 // TestPartitionAt3 tests ability to overwrite buffer previously written.
