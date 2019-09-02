@@ -656,7 +656,7 @@ func TestBadGobFile(t *testing.T) {
 	var buffer Buffer
 	dec := gob.NewDecoder(buf)
 	if err := dec.Decode(&buffer); err == nil {
-		t.Error("expeced an error here, file does not exist")
+		t.Error("expected an error here, file does not exist")
 	}
 }
 
@@ -672,7 +672,7 @@ func TestBadGobFile2(t *testing.T) {
 	var buffer Buffer
 	dec := gob.NewDecoder(buf)
 	if err := dec.Decode(&buffer); err == nil {
-		t.Error("expeced an error here, file does not exist")
+		t.Error("expected an error here, file does not exist")
 	}
 }
 

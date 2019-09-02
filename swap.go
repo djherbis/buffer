@@ -14,7 +14,7 @@ type swap struct {
 // then it io.Copy's from a to b and writes to b.
 // Once the Buffer is empty again, it starts over writing to a.
 // Note that if b.Cap() <= a.Cap() it will cause a panic, b is expected
-// to be larger in order to accomodate writes past a.Cap().
+// to be larger in order to accommodate writes past a.Cap().
 func NewSwap(a, b Buffer) Buffer {
 	return NewSwapAt(toBufferAt(a), toBufferAt(b))
 }
@@ -23,7 +23,7 @@ func NewSwap(a, b Buffer) Buffer {
 // then it io.Copy's from a to b and writes to b.
 // Once the Buffer is empty again, it starts over writing to a.
 // Note that if b.Cap() <= a.Cap() it will cause a panic, b is expected
-// to be larger in order to accomodate writes past a.Cap().
+// to be larger in order to accommodate writes past a.Cap().
 func NewSwapAt(a, b BufferAt) BufferAt {
 	if b.Cap() <= a.Cap() {
 		panic("Buffer b must be larger than a.")
