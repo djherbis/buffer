@@ -34,10 +34,10 @@ func OverLimitTestN(N int64, t *testing.T) {
 		}
 	}
 
-	if !bytes.Equal(got.Bytes(), exp.Bytes()[:N]) {
+	if got.String() != exp.String()[:N] {
 		t.Errorf("Exp: %s\n Got: %s\n",
-			string(exp.Bytes()[:N]),
-			string(got.Bytes()))
+			exp.String()[:N],
+			got.String())
 	}
 
 	if int64(got.Len()) != N {
@@ -54,9 +54,9 @@ func LimitTestN(N int64, t *testing.T) {
 
 	io.CopyN(w, rand.Reader, N)
 
-	if !bytes.Equal(got.Bytes(), exp.Bytes()) {
+	if got.String() != exp.String() {
 		t.Errorf("Exp: %s\n Got: %s\n",
-			string(exp.Bytes()[:N]),
-			string(got.Bytes()))
+			exp.String(),
+			got.String())
 	}
 }
