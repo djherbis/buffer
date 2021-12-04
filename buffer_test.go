@@ -892,7 +892,7 @@ func TestPartitionAt2(t *testing.T) {
 // TestPartitionAt3 tests ability to overwrite buffer previously written.
 func TestPartitionAt3(t *testing.T) {
 	buf := NewPartitionAt(NewMemPoolAt(5))
-	buf.Write(make([]byte, 15, 15)) // allocates 3 membuffers
+	buf.Write(make([]byte, 15)) // allocates 3 membuffers
 	buf.WriteAt([]byte("hey"), 0)
 	data := make([]byte, 10)
 	data = data[:3]
