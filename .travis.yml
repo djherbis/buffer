@@ -1,6 +1,6 @@
 language: go
 go:
-- tip
+- 1.17.x
 before_install:
   - go install honnef.co/go/tools/cmd/staticcheck@latest
   - go get github.com/axw/gocov/gocov
