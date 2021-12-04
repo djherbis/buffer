@@ -2,13 +2,13 @@ language: go
 go:
 - tip
 before_install:
-  - go get golang.org/x/lint/golint
+  - go install honnef.co/go/tools/cmd/staticcheck@latest
   - go get github.com/axw/gocov/gocov
-  - go get github.com/mattn/goveralls
+  - go install github.com/mattn/goveralls@latest
   - if ! go get code.google.com/p/go.tools/cmd/cover; then go get golang.org/x/tools/cmd/cover; fi
 script:
-  - '[ "${TRAVIS_PULL_REQUEST}" != "false" ] || $HOME/gopath/bin/goveralls -service=travis-ci -repotoken $COVERALLS_TOKEN'
-  - $HOME/gopath/bin/golint ./...
+  - '[ "${TRAVIS_PULL_REQUEST}" != "false" ] || $GOPATH/bin/goveralls -service=travis-ci -repotoken $COVERALLS_TOKEN'
+  - "$GOPATH/bin/staticcheck ./..."
   - go vet
   - go test -v ./...
 notifications:
