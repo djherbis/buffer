@@ -1,0 +1,9 @@
+name: go test
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+jobs:
+  call-workflow:
+    uses: djherbis/actions/.github/workflows/go-test.yml@main
