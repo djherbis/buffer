@@ -147,7 +147,8 @@ func (buf *partitionAt) WriteAt(p []byte, off int64) (n int, err error) {
 		endOff := off + int64(len(p))
 		if fitCheck(buffer) >= endOff {
 			// Everything should fit.
-			return buffer.WriteAt(p, off)
+			m, err := buffer.WriteAt(p, off)
+			return n + m, err
 		}
 
 		// Assume it won't all fit, only write what should fit.
@@ -165,7 +166,7 @@ func (buf *partitionAt) WriteAt(p []byte, off int64) (n int, err error) {
 		}
 		if i+1 == len(buf.ListAt) {
 			if err := buf.grow(); err != nil {
-				return 0, err
+				return n, err
 			}
 			fitCheck = BufferAt.Cap
 		}
