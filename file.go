@@ -60,7 +60,7 @@ func (buf *fileBuffer) UnmarshalBinary(data []byte) error {
 		return err
 	}
 
-	file, err := os.Open(filename)
+	file, err := os.OpenFile(filename, os.O_RDWR, 0)
 	if err != nil {
 		return err
 	}

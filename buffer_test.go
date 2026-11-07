@@ -313,6 +313,41 @@ func TestGob(t *testing.T) {
 	buffer.Reset()
 }
 
+func TestGobFileRestoresWriteAccess(t *testing.T) {
+	file, err := ioutil.TempFile("", "buffer")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(file.Name())
+	defer file.Close()
+	buf := NewFile(10, file)
+	if n, err := buf.Write([]byte("abc")); n != 3 || err != nil {
+		t.Fatalf("initial write = %d, %v; want 3, nil", n, err)
+	}
+	if n, err := buf.Read(make([]byte, 1)); n != 1 || err != nil {
+		t.Fatalf("initial read = %d, %v; want 1, nil", n, err)
+	}
+	var encoded bytes.Buffer
+	if err := gob.NewEncoder(&encoded).Encode(&buf); err != nil {
+		t.Fatal(err)
+	}
+	var restored BufferAt
+	if err := gob.NewDecoder(&encoded).Decode(&restored); err != nil {
+		t.Fatal(err)
+	}
+	defer restored.(*fileBuffer).file.Close()
+	if n, err := restored.Write([]byte("de")); n != 2 || err != nil {
+		t.Fatalf("restored write = %d, %v; want 2, nil", n, err)
+	}
+	data, err := ioutil.ReadAll(restored)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(data) != "bcde" {
+		t.Fatalf("restored contents = %q; want %q", data, "bcde")
+	}
+}
+
 func TestDiscard(t *testing.T) {
 	buf := Discard
 	if buf.Cap() != math.MaxInt64 {
