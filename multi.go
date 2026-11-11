@@ -95,7 +95,8 @@ func (buf *chain) Defrag() {
 func (buf *chain) Read(p []byte) (n int, err error) {
 	n, err = buf.Buf.Read(p)
 	if len(p[n:]) > 0 && (err == nil || err == io.EOF) {
-		m, err := buf.Next.Read(p[n:])
+		var m int
+		m, err = buf.Next.Read(p[n:])
 		n += m
 		if err != nil {
 			return n, err
