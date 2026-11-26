@@ -53,12 +53,12 @@ func (buf *fileBuffer) MarshalBinary() ([]byte, error) {
 
 func (buf *fileBuffer) UnmarshalBinary(data []byte) error {
 	buffer := bytes.NewBuffer(data)
-	var filename string
 	var N, L, O int64
-	_, err := fmt.Fscanln(buffer, &filename)
+	filename, err := buffer.ReadString('\n')
 	if err != nil {
 		return err
 	}
+	filename = filename[:len(filename)-1]
 
 	file, err := os.OpenFile(filename, os.O_RDWR, 0)
 	if err != nil {
